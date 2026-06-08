@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { REGION } from "../../config/region";
+import { supabase } from "../../lib/supabase";
 
 // Íconos de búsqueda y ubicación
 const IconoBuscar = () => (
@@ -19,6 +20,21 @@ const IconoUbicacion = () => (
 export default function Hero() {
   const [busqueda, setBusqueda] = useState("");
   const [ciudad, setCiudad] = useState("");
+  const [stats, setStats] = useState({ ofertas: 0, empresas: 0, candidatos: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("ofertas").select("*", { count: "exact", head: true }).eq("estado", "activa"),
+      supabase.from("perfiles_empresa").select("*", { count: "exact", head: true }),
+      supabase.from("perfiles_candidato").select("*", { count: "exact", head: true }),
+    ]).then(([{ count: ofertas }, { count: empresas }, { count: candidatos }]) => {
+      setStats({
+        ofertas:    ofertas    ?? 0,
+        empresas:   empresas   ?? 0,
+        candidatos: candidatos ?? 0,
+      });
+    });
+  }, []);
   const navigate = useNavigate();
 
   const manejarBusqueda = (e) => {
@@ -101,12 +117,14 @@ export default function Hero() {
         {/* Estadísticas rápidas */}
         <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10">
           {[
-            { numero: "500+", texto: "Ofertas activas" },
-            { numero: "200+", texto: "Empresas registradas" },
-            { numero: "10.000+", texto: "Profesionales" },
+            { numero: stats.ofertas,    texto: "Ofertas activas" },
+            { numero: stats.empresas,   texto: "Empresas registradas" },
+            { numero: stats.candidatos, texto: "Profesionales de salud" },
           ].map((stat) => (
             <div key={stat.texto} className="text-center">
-              <p className="text-3xl font-bold text-esmeralda-claro">{stat.numero}</p>
+              <p className="text-3xl font-bold text-esmeralda-claro">
+                {stat.numero.toLocaleString("es-CO")}
+              </p>
               <p className="text-blue-200 text-sm mt-1">{stat.texto}</p>
             </div>
           ))}
