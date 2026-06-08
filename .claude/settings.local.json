@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -o - -w \"\\\\nHTTP_STATUS:%{http_code}\" -X POST \"https://api.supabase.com/v1/projects/sgtfstuunasmhvizhjvp/database/query\" -H \"Authorization: Bearer sb_publishable_fSuQQbst2_EDBSLmyTdH7A_QdSyx5au\" -H \"Content-Type: application/json\" -d \"{\\\\\"query\\\\\": \\\\\"SELECT 1\\\\\"}\")",
+      "PowerShell(gh auth status 2>&1)",
+      "PowerShell(winget install --id GitHub.cli -e --silent 2>&1)"
+    ]
+  }
+}
