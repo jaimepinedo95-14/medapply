@@ -71,8 +71,8 @@ export default function Hero() {
             <span className="text-esmeralda-claro">en salud</span>
           </h1>
           <p className="text-lg md:text-xl text-blue-200 max-w-2xl mx-auto">
-            Más de 500 ofertas activas en clínicas, hospitales, IPS y EPS de todo Colombia.
-            Tu carrera en salud empieza aquí.
+            La primera bolsa de empleo exclusiva del sector salud en Colombia.
+            Conectamos talento médico con las mejores instituciones.
           </p>
         </div>
 
