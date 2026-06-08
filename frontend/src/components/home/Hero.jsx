@@ -125,17 +125,17 @@ export default function Hero() {
         </form>
 
         {/* Estadísticas rápidas */}
-        <div className="mt-10 flex flex-wrap justify-center gap-6 md:gap-10">
+        <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-8 md:gap-14 border-t border-white/10 pt-8">
           {[
             { numero: stats.ofertas,    texto: "Ofertas activas" },
             { numero: stats.empresas,   texto: "Empresas registradas" },
             { numero: stats.candidatos, texto: "Profesionales de salud" },
           ].map((stat) => (
-            <div key={stat.texto} className="text-center">
-              <p className="text-3xl font-bold text-esmeralda-claro">
+            <div key={stat.texto} className="text-center px-1">
+              <p className="text-2xl sm:text-3xl font-bold text-esmeralda-claro leading-tight">
                 {stat.numero.toLocaleString("es-CO")}
               </p>
-              <p className="text-blue-200 text-sm mt-1">{stat.texto}</p>
+              <p className="text-blue-200 text-xs sm:text-sm mt-1 leading-snug">{stat.texto}</p>
             </div>
           ))}
         </div>
