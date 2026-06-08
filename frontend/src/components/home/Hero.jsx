@@ -21,6 +21,7 @@ export default function Hero() {
   const [busqueda, setBusqueda] = useState("");
   const [ciudad, setCiudad] = useState("");
   const [stats, setStats] = useState({ ofertas: 0, empresas: 0, candidatos: 0 });
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -35,7 +36,6 @@ export default function Hero() {
       });
     });
   }, []);
-  const navigate = useNavigate();
 
   const manejarBusqueda = (e) => {
     e.preventDefault();
@@ -47,13 +47,23 @@ export default function Hero() {
   };
 
   return (
-    <section className="bg-gradient-to-br from-azul-marino via-azul-claro to-azul-marino text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+    <section
+      className="relative text-white"
+      style={{
+        backgroundImage: "url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay azul marino semitransparente */}
+      <div className="absolute inset-0 bg-azul-marino/85" />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
 
         {/* Texto principal */}
         <div className="text-center mb-10">
           <span className="inline-block bg-esmeralda text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
-            🏥 La bolsa de empleo #1 del sector salud en Colombia
+            🏥 La primera bolsa de empleo exclusiva del sector salud en Colombia
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-5">
             Encuentra tu próximo empleo
