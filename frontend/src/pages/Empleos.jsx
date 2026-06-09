@@ -247,12 +247,16 @@ export default function Empleos() {
                 <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto">
                   {hayFiltros
                     ? "Prueba quitando algunos filtros para ver más resultados."
-                    : "Aún no hay ofertas publicadas. Vuelve pronto."}
+                    : "Aún no hay ofertas publicadas. Sé el primero en publicar una vacante."}
                 </p>
-                {hayFiltros && (
+                {hayFiltros ? (
                   <button onClick={limpiarFiltros} className="btn-outline text-sm py-2.5 px-6">
                     Limpiar filtros
                   </button>
+                ) : (
+                  <a href="/registro/empresa" className="btn-primario text-sm py-2.5 px-6">
+                    Publicar una vacante
+                  </a>
                 )}
               </div>
             ) : (

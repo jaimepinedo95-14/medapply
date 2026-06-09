@@ -1,48 +1,25 @@
-// Dashboard administrativo — ingresos visibles solo para superadmin
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 
-const STATS_BASE = [
-  { label: "Total candidatos", valor: "1.248", variacion: "+12 este mes", icono: "👤", color: "bg-blue-50 border-blue-100",   texto: "text-blue-700",   permiso: null },
-  { label: "Empresas activas", valor: "87",    variacion: "+3 este mes",  icono: "🏥", color: "bg-green-50 border-green-100", texto: "text-green-700",  permiso: null },
-  { label: "Ofertas activas",  valor: "312",   variacion: "+28 este mes", icono: "📋", color: "bg-purple-50 border-purple-100",texto: "text-purple-700", permiso: null },
-  { label: "Ingresos del mes", valor: "$4.3M", variacion: "+8% vs. mayo", icono: "💰", color: "bg-yellow-50 border-yellow-100",texto: "text-yellow-700", permiso: "ver_pagos" },
-];
-
-const USUARIOS_RECIENTES = [
-  { nombre: "María García",   email: "m.garcia@gmail.com",  categoria: "Médico General",      ciudad: "Bogotá",       plan: "Destacado", estado: "Activo" },
-  { nombre: "Carlos Ruiz",    email: "c.ruiz@correo.co",    categoria: "Bacteriólogo",         ciudad: "Medellín",     plan: "Gratuito",  estado: "Activo" },
-  { nombre: "Lucía Martínez", email: "lucia.m@gmail.com",   categoria: "Enfermera",            ciudad: "Cali",         plan: "Destacado", estado: "Activo" },
-  { nombre: "Andrés Vargas",  email: "a.vargas@med.co",     categoria: "Médico Especialista",  ciudad: "Bogotá",       plan: "Gratuito",  estado: "Activo" },
-  { nombre: "Sofía Rodríguez",email: "sofia.r@hotmail.com", categoria: "Aux. Enfermería",      ciudad: "Barranquilla", plan: "Gratuito",  estado: "Activo" },
-];
-
-const EMPRESAS_RECIENTES = [
-  { nombre: "Clínica San Rafael",       nit: "800200543-2", ciudad: "Bogotá",   plan: "Premium",  ofertas: 4 },
-  { nombre: "Hospital Univ. del Norte", nit: "890107487-1", ciudad: "B/quilla", plan: "Básico",   ofertas: 2 },
-  { nombre: "IPS Salud Total",          nit: "830019309-3", ciudad: "B/quilla", plan: "Gratuito", ofertas: 1 },
-  { nombre: "Lab. Clínico Baxter",      nit: "860068964-4", ciudad: "Bogotá",   plan: "Básico",   ofertas: 2 },
-  { nombre: "Cruz Roja Colombiana",     nit: "899999128-1", ciudad: "Bogotá",   plan: "Premium",  ofertas: 3 },
-];
-
-const PAGOS_RECIENTES = [
-  { id: "TXN-001", usuario: "Clínica San Rafael",     tipo: "Empresa",   plan: "Premium",   monto: 159900, fecha: "2026-06-07", estado: "Pagado" },
-  { id: "TXN-002", usuario: "María Sofía Ruiz",       tipo: "Candidato", plan: "Destacado", monto:   9900, fecha: "2026-06-07", estado: "Pagado" },
-  { id: "TXN-003", usuario: "EPS Sanitas",            tipo: "Empresa",   plan: "Premium",   monto: 159900, fecha: "2026-06-06", estado: "Pagado" },
-  { id: "TXN-004", usuario: "Hospital Universitario", tipo: "Empresa",   plan: "Básico",    monto:  79900, fecha: "2026-06-06", estado: "Pagado" },
-  { id: "TXN-005", usuario: "Paola Castro",           tipo: "Candidato", plan: "Destacado", monto:   9900, fecha: "2026-06-05", estado: "Pendiente" },
-];
-
+const COLOR_ROL = {
+  candidato:  "bg-blue-100 text-blue-700",
+  empresa:    "bg-teal-100 text-teal-700",
+  moderador:  "bg-purple-100 text-purple-700",
+  admin:      "bg-orange-100 text-orange-700",
+  superadmin: "bg-yellow-100 text-yellow-700",
+};
 const COLOR_PLAN = {
   Premium: "bg-esmeralda text-white", Básico: "bg-blue-100 text-blue-700",
   Gratuito: "bg-gray-100 text-gray-500", Destacado: "bg-yellow-100 text-yellow-700",
 };
 const COLOR_PAGO = {
-  Pagado: "bg-green-100 text-green-700", Pendiente: "bg-yellow-100 text-yellow-700", Fallido: "bg-red-100 text-red-600",
+  activo: "bg-green-100 text-green-700", vencido: "bg-red-100 text-red-600", pendiente: "bg-yellow-100 text-yellow-700",
 };
 
 function BarraPlan({ label, cantidad, total, color }) {
-  const pct = Math.round((cantidad / total) * 100);
+  const pct = total > 0 ? Math.round((cantidad / total) * 100) : 0;
   return (
     <div className="mb-3">
       <div className="flex justify-between text-xs text-gray-500 mb-1">
@@ -60,11 +37,72 @@ export default function DashboardAdmin() {
   const { tienePermiso, usuario } = useAuth();
   const esSuperAdmin = usuario?.rol === "superadmin";
 
-  const stats = STATS_BASE.filter((s) => !s.permiso || tienePermiso(s.permiso));
+  const [stats, setStats]                     = useState({ candidatos: 0, empresas: 0, ofertas: 0, ingresos: 0 });
+  const [planesEmpresas, setPlanesEmpresas]   = useState({ Premium: 0, Básico: 0, Gratuito: 0 });
+  const [usuariosRecientes, setUsuariosRecientes] = useState([]);
+  const [empresasRecientes, setEmpresasRecientes] = useState([]);
+  const [pagosRecientes, setPagosRecientes]   = useState([]);
+  const [cargando, setCargando]               = useState(true);
+
+  useEffect(() => {
+    async function cargar() {
+      try {
+        const primerDiaMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+        const [
+          { count: candidatos },
+          { count: empresas },
+          { count: ofertas },
+          { data: suscripciones },
+          { data: ultimosCandidatos },
+          { data: ultimasEmpresas },
+          { data: ultimosPagos },
+          { data: planesData },
+        ] = await Promise.all([
+          supabase.from("perfiles_candidato").select("*", { count: "exact", head: true }),
+          supabase.from("perfiles_empresa").select("*", { count: "exact", head: true }),
+          supabase.from("ofertas").select("*", { count: "exact", head: true }).eq("estado", "activa"),
+          supabase.from("suscripciones").select("precio").eq("activo", true).gte("fecha_inicio", primerDiaMes),
+          supabase.from("usuarios").select("id, nombre, email, rol, created_at")
+            .eq("rol", "candidato").order("created_at", { ascending: false }).limit(5),
+          supabase.from("perfiles_empresa").select("nombre_empresa, ciudad, plan, usuario_id, usuarios!inner(created_at)")
+            .order("usuarios(created_at)", { ascending: false }).limit(5),
+          supabase.from("suscripciones").select("id, plan, precio, activo, created_at, usuarios!inner(nombre, rol)")
+            .order("created_at", { ascending: false }).limit(5),
+          supabase.from("perfiles_empresa").select("plan"),
+        ]);
+
+        const ingresos = (suscripciones || []).reduce((s, r) => s + (r.precio || 0), 0);
+
+        const planes = { Premium: 0, Básico: 0, Gratuito: 0 };
+        (planesData || []).forEach((e) => { if (e.plan in planes) planes[e.plan]++; });
+
+        setStats({ candidatos: candidatos ?? 0, empresas: empresas ?? 0, ofertas: ofertas ?? 0, ingresos });
+        setPlanesEmpresas(planes);
+        setUsuariosRecientes(ultimosCandidatos || []);
+        setEmpresasRecientes(ultimasEmpresas || []);
+        setPagosRecientes(ultimosPagos || []);
+      } catch (e) {
+        console.error("DashboardAdmin:", e);
+      } finally {
+        setCargando(false);
+      }
+    }
+    cargar();
+  }, []);
+
+  const statsCards = [
+    { label: "Total candidatos", valor: stats.candidatos, icono: "👤", color: "bg-blue-50 border-blue-100",    texto: "text-blue-700",   permiso: null },
+    { label: "Empresas activas", valor: stats.empresas,   icono: "🏥", color: "bg-green-50 border-green-100",  texto: "text-green-700",  permiso: null },
+    { label: "Ofertas activas",  valor: stats.ofertas,    icono: "📋", color: "bg-purple-50 border-purple-100", texto: "text-purple-700", permiso: null },
+    { label: "Ingresos del mes", valor: `$${stats.ingresos.toLocaleString("es-CO")}`, icono: "💰",
+      color: "bg-yellow-50 border-yellow-100", texto: "text-yellow-700", permiso: "ver_pagos" },
+  ].filter((s) => !s.permiso || tienePermiso(s.permiso));
+
+  const totalEmpresas = planesEmpresas.Premium + planesEmpresas.Básico + planesEmpresas.Gratuito;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
-
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -80,150 +118,184 @@ export default function DashboardAdmin() {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <div key={s.label} className={`rounded-2xl border p-5 ${s.color}`}>
-            <div className="text-2xl mb-2">{s.icono}</div>
-            <p className={`text-3xl font-bold ${s.texto}`}>{s.valor}</p>
-            <p className="text-gray-500 text-sm mt-1">{s.label}</p>
-            <p className="text-xs text-gray-400 mt-1">{s.variacion}</p>
-          </div>
-        ))}
+        {cargando
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-gray-100 p-5 bg-gray-50 animate-pulse h-28" />
+            ))
+          : statsCards.map((s) => (
+              <div key={s.label} className={`rounded-2xl border p-5 ${s.color}`}>
+                <div className="text-2xl mb-2">{s.icono}</div>
+                <p className={`text-3xl font-bold ${s.texto}`}>{s.valor}</p>
+                <p className="text-gray-500 text-sm mt-1">{s.label}</p>
+              </div>
+            ))
+        }
       </div>
 
       {/* Distribución de planes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      {!cargando && totalEmpresas > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm max-w-md">
           <h3 className="font-bold text-azul-marino mb-4">Distribución de planes — Empresas</h3>
-          <BarraPlan label="Premium"  cantidad={23} total={87} color="bg-esmeralda" />
-          <BarraPlan label="Básico"   cantidad={31} total={87} color="bg-blue-400"  />
-          <BarraPlan label="Gratuito" cantidad={33} total={87} color="bg-gray-300"  />
+          <BarraPlan label="Premium"  cantidad={planesEmpresas.Premium}  total={totalEmpresas} color="bg-esmeralda" />
+          <BarraPlan label="Básico"   cantidad={planesEmpresas.Básico}   total={totalEmpresas} color="bg-blue-400"  />
+          <BarraPlan label="Gratuito" cantidad={planesEmpresas.Gratuito} total={totalEmpresas} color="bg-gray-300"  />
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-          <h3 className="font-bold text-azul-marino mb-4">Distribución de planes — Candidatos</h3>
-          <BarraPlan label="Destacado" cantidad={187} total={1248} color="bg-yellow-400" />
-          <BarraPlan label="Gratuito"  cantidad={1061} total={1248} color="bg-gray-300" />
-        </div>
-      </div>
+      )}
 
-      {/* Tabla de usuarios recientes */}
+      {/* Candidatos recientes */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 className="font-bold text-azul-marino">Candidatos recientes</h3>
-          <Link to="/admin/usuarios" className="text-esmeralda text-xs font-semibold hover:underline">
-            Ver todos →
-          </Link>
+          <Link to="/admin/usuarios" className="text-esmeralda text-xs font-semibold hover:underline">Ver todos →</Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-5 py-3 text-left font-semibold text-azul-marino">Candidato</th>
-                <th className="px-5 py-3 text-left font-semibold text-azul-marino hidden md:table-cell">Categoría</th>
-                <th className="px-5 py-3 text-left font-semibold text-azul-marino hidden lg:table-cell">Ciudad</th>
-                <th className="px-5 py-3 text-center font-semibold text-azul-marino">Plan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {USUARIOS_RECIENTES.map((u) => (
-                <tr key={u.email} className="hover:bg-gray-50">
-                  <td className="px-5 py-3">
-                    <p className="font-semibold text-azul-marino">{u.nombre}</p>
-                    <p className="text-gray-400 text-xs">{u.email}</p>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{u.categoria}</td>
-                  <td className="px-5 py-3 text-gray-600 hidden lg:table-cell">{u.ciudad}</td>
-                  <td className="px-5 py-3 text-center">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[u.plan]}`}>{u.plan}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Tabla de empresas recientes */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h3 className="font-bold text-azul-marino">Empresas recientes</h3>
-          <Link to="/admin/empresas" className="text-esmeralda text-xs font-semibold hover:underline">
-            Ver todas →
-          </Link>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-5 py-3 text-left font-semibold text-azul-marino">Empresa</th>
-                <th className="px-5 py-3 text-left font-semibold text-azul-marino hidden md:table-cell">Ciudad</th>
-                <th className="px-5 py-3 text-center font-semibold text-azul-marino">Plan</th>
-                <th className="px-5 py-3 text-center font-semibold text-azul-marino">Ofertas</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {EMPRESAS_RECIENTES.map((e) => (
-                <tr key={e.nit} className="hover:bg-gray-50">
-                  <td className="px-5 py-3">
-                    <p className="font-semibold text-azul-marino">{e.nombre}</p>
-                    <p className="text-gray-400 text-xs">NIT {e.nit}</p>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{e.ciudad}</td>
-                  <td className="px-5 py-3 text-center">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[e.plan]}`}>{e.plan}</span>
-                  </td>
-                  <td className="px-5 py-3 text-center text-gray-600">{e.ofertas}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Tabla de pagos — solo superadmin */}
-      {tienePermiso("ver_pagos") && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            <h3 className="font-bold text-azul-marino">Pagos recientes</h3>
-            <Link to="/admin/suscripciones" className="text-esmeralda text-xs font-semibold hover:underline">
-              Ver todos →
-            </Link>
+        {cargando ? (
+          <div className="p-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
           </div>
+        ) : usuariosRecientes.length === 0 ? (
+          <div className="py-12 text-center text-gray-400">
+            <p className="text-3xl mb-2">👤</p>
+            <p className="text-sm">Aún no hay usuarios registrados.</p>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-5 py-3 text-left font-semibold text-azul-marino">ID</th>
-                  <th className="px-5 py-3 text-left font-semibold text-azul-marino">Usuario</th>
-                  <th className="px-5 py-3 text-center font-semibold text-azul-marino">Plan</th>
-                  <th className="px-5 py-3 text-right font-semibold text-azul-marino">Monto</th>
-                  <th className="px-5 py-3 text-center font-semibold text-azul-marino">Estado</th>
+                  <th className="px-5 py-3 text-left font-semibold text-azul-marino">Candidato</th>
+                  <th className="px-5 py-3 text-center font-semibold text-azul-marino hidden sm:table-cell">Rol</th>
+                  <th className="px-5 py-3 text-right font-semibold text-azul-marino hidden md:table-cell">Registro</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {PAGOS_RECIENTES.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 text-gray-400 text-xs font-mono">{p.id}</td>
+                {usuariosRecientes.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-azul-marino">{p.usuario}</p>
-                      <p className="text-gray-400 text-xs">{p.tipo} · {p.fecha}</p>
+                      <p className="font-semibold text-azul-marino">{u.nombre}</p>
+                      <p className="text-gray-400 text-xs">{u.email}</p>
                     </td>
-                    <td className="px-5 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[p.plan]}`}>{p.plan}</span>
+                    <td className="px-5 py-3 text-center hidden sm:table-cell">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_ROL[u.rol] || "bg-gray-100 text-gray-500"}`}>
+                        {u.rol}
+                      </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-azul-marino">
-                      ${p.monto.toLocaleString("es-CO")}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PAGO[p.estado]}`}>{p.estado}</span>
+                    <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">
+                      {new Date(u.created_at).toLocaleDateString("es-CO")}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* Empresas recientes */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="font-bold text-azul-marino">Empresas recientes</h3>
+          <Link to="/admin/empresas" className="text-esmeralda text-xs font-semibold hover:underline">Ver todas →</Link>
+        </div>
+        {cargando ? (
+          <div className="p-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : empresasRecientes.length === 0 ? (
+          <div className="py-12 text-center text-gray-400">
+            <p className="text-3xl mb-2">🏥</p>
+            <p className="text-sm">Aún no hay empresas registradas.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-5 py-3 text-left font-semibold text-azul-marino">Empresa</th>
+                  <th className="px-5 py-3 text-left font-semibold text-azul-marino hidden md:table-cell">Ciudad</th>
+                  <th className="px-5 py-3 text-center font-semibold text-azul-marino">Plan</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {empresasRecientes.map((e, i) => (
+                  <tr key={e.usuario_id || i} className="hover:bg-gray-50">
+                    <td className="px-5 py-3">
+                      <p className="font-semibold text-azul-marino">{e.nombre_empresa}</p>
+                    </td>
+                    <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{e.ciudad || "—"}</td>
+                    <td className="px-5 py-3 text-center">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[e.plan] || "bg-gray-100 text-gray-500"}`}>
+                        {e.plan || "Gratuito"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagos recientes — solo superadmin */}
+      {tienePermiso("ver_pagos") && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <h3 className="font-bold text-azul-marino">Suscripciones recientes</h3>
+            <Link to="/admin/suscripciones" className="text-esmeralda text-xs font-semibold hover:underline">Ver todas →</Link>
+          </div>
+          {cargando ? (
+            <div className="p-5 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : pagosRecientes.length === 0 ? (
+            <div className="py-12 text-center text-gray-400">
+              <p className="text-3xl mb-2">💰</p>
+              <p className="text-sm">Aún no hay suscripciones registradas.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-5 py-3 text-left font-semibold text-azul-marino">Usuario</th>
+                    <th className="px-5 py-3 text-center font-semibold text-azul-marino">Plan</th>
+                    <th className="px-5 py-3 text-right font-semibold text-azul-marino">Monto</th>
+                    <th className="px-5 py-3 text-center font-semibold text-azul-marino hidden sm:table-cell">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {pagosRecientes.map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-azul-marino">{p.usuarios?.nombre || "—"}</p>
+                        <p className="text-gray-400 text-xs">{new Date(p.created_at).toLocaleDateString("es-CO")}</p>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[p.plan] || "bg-gray-100 text-gray-500"}`}>
+                          {p.plan}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right font-bold text-azul-marino">
+                        ${(p.precio || 0).toLocaleString("es-CO")}
+                      </td>
+                      <td className="px-5 py-3 text-center hidden sm:table-cell">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PAGO[p.activo ? "activo" : "vencido"]}`}>
+                          {p.activo ? "Activo" : "Vencido"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
-
     </div>
   );
 }
