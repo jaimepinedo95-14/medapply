@@ -21,36 +21,36 @@ function BadgeRol({ rol }) {
 
 // ── Modal de perfil de candidato ─────────────────────────────────────────────
 function ModalPerfilCandidato({ usuario, onCerrar }) {
-  const [perfil, setPerfil]   = useState(null);
+  const [perfil, setPerfil]     = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [cvUrl, setCvUrl]     = useState(null);
+  const [cvUrl, setCvUrl]       = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
 
   useEffect(() => {
-    supabase
-      .from("perfiles_candidato")
-      .select("*")
-      .eq("usuario_id", usuario.id)
-      .single()
-      .then(async ({ data }) => {
-        setPerfil(data || null);
+    async function cargar() {
+      const { data } = await supabase
+        .from("perfiles_candidato")
+        .select("*")
+        .eq("usuario_id", usuario.id)
+        .maybeSingle();
 
-        // Generar URLs firmadas para CV y video
-        if (data?.hoja_de_vida_url) {
-          const { data: signed } = await supabase.storage
-            .from("cvs")
-            .createSignedUrl(data.hoja_de_vida_url, 3600);
-          if (signed?.signedUrl) setCvUrl(signed.signedUrl);
-        }
-        if (data?.video_presentacion_url) {
-          const { data: signed } = await supabase.storage
-            .from("videos")
-            .createSignedUrl(data.video_presentacion_url, 3600);
-          if (signed?.signedUrl) setVideoUrl(signed.signedUrl);
-        }
-        setCargando(false);
-      })
-      .catch(() => setCargando(false));
+      setPerfil(data || null);
+
+      if (data?.hoja_de_vida_url) {
+        const { data: signed } = await supabase.storage
+          .from("cvs")
+          .createSignedUrl(data.hoja_de_vida_url, 3600);
+        if (signed?.signedUrl) setCvUrl(signed.signedUrl);
+      }
+      if (data?.video_presentacion_url) {
+        const { data: signed } = await supabase.storage
+          .from("videos")
+          .createSignedUrl(data.video_presentacion_url, 3600);
+        if (signed?.signedUrl) setVideoUrl(signed.signedUrl);
+      }
+      setCargando(false);
+    }
+    cargar().catch(() => setCargando(false));
   }, [usuario.id]);
 
   const exps = Array.isArray(perfil?.experiencias) ? perfil.experiencias : [];
@@ -59,117 +59,151 @@ function ModalPerfilCandidato({ usuario, onCerrar }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="p-5 border-b border-gray-100 flex items-start justify-between">
-          <div className="flex items-center gap-3">
+
+        {/* Header con foto prominente */}
+        <div className="p-5 border-b border-gray-100 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
             {perfil?.foto ? (
-              <img src={perfil.foto} alt="Foto" className="w-12 h-12 rounded-full object-cover border border-gray-200" />
+              <img
+                src={perfil.foto}
+                alt="Foto de perfil"
+                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
+              />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl">👤</div>
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl flex-shrink-0">
+                👤
+              </div>
             )}
             <div>
-              <h3 className="font-bold text-azul-marino text-lg">{usuario.nombre}</h3>
+              <h3 className="font-bold text-azul-marino text-lg leading-tight">{usuario.nombre}</h3>
               <p className="text-gray-400 text-sm">{usuario.email}</p>
+              {perfil?.categoria_profesional && (
+                <p className="text-esmeralda text-xs font-semibold mt-1">{perfil.categoria_profesional}</p>
+              )}
             </div>
           </div>
-          <button onClick={onCerrar} className="text-gray-400 hover:text-gray-600 text-2xl ml-4">×</button>
+          <button onClick={onCerrar} className="text-gray-400 hover:text-gray-600 text-2xl flex-shrink-0">×</button>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 space-y-5">
           {cargando ? (
             <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : !perfil ? (
-            <div className="text-center py-8 text-gray-400">
-              <p className="text-3xl mb-2">📋</p>
-              <p className="text-sm">Este candidato aún no ha completado su perfil.</p>
+            <div className="text-center py-10 text-gray-400">
+              <p className="text-4xl mb-2">📋</p>
+              <p className="text-sm font-semibold text-gray-500">Este candidato aún no ha completado su perfil.</p>
             </div>
           ) : (
             <>
-              {/* Datos básicos */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: "Categoría profesional", valor: perfil.categoria_profesional },
-                  { label: "Ciudad",                valor: perfil.ciudad },
-                  { label: "Teléfono",              valor: perfil.telefono },
-                  { label: "ReTHUS / Registro",     valor: perfil.numero_tarjeta_profesional },
-                  { label: "Perfil completado",      valor: perfil.porcentaje_perfil ? `${perfil.porcentaje_perfil}%` : null },
-                ].filter((f) => f.valor).map((f) => (
-                  <div key={f.label} className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-400">{f.label}</p>
-                    <p className="font-semibold text-azul-marino text-sm mt-0.5">{f.valor}</p>
-                  </div>
-                ))}
+              {/* Datos de contacto y profesionales */}
+              <div>
+                <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Información</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Ciudad",               valor: perfil.ciudad },
+                    { label: "Teléfono",             valor: perfil.telefono },
+                    { label: "Categoría profesional",valor: perfil.categoria_profesional },
+                    { label: "N.° Tarjeta / ReTHUS", valor: perfil.numero_tarjeta_profesional },
+                    { label: "Perfil completado",    valor: perfil.porcentaje_perfil != null ? `${perfil.porcentaje_perfil}%` : null },
+                  ].filter((f) => f.valor).map((f) => (
+                    <div key={f.label} className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400">{f.label}</p>
+                      <p className="font-semibold text-azul-marino text-sm mt-0.5">{f.valor}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Experiencia laboral */}
-              {exps.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">
-                    Experiencia laboral
+              <div>
+                <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Experiencia laboral</p>
+                {exps.length === 0 ? (
+                  <p className="text-sm text-gray-400 bg-gray-50 rounded-xl px-4 py-3">
+                    No ha registrado experiencia laboral.
                   </p>
+                ) : (
                   <div className="space-y-2">
                     {exps.map((exp, i) => (
                       <div key={i} className="bg-gray-50 rounded-xl p-3">
                         <p className="font-semibold text-azul-marino text-sm">{exp.cargo}</p>
-                        <p className="text-gray-500 text-xs">{exp.empresa}{exp.ciudadExp ? ` · ${exp.ciudadExp}` : ""}</p>
-                        <p className="text-gray-400 text-xs">{exp.inicio} — {exp.esActual ? "Presente" : (exp.fin || "—")}</p>
-                        {exp.descripcion && <p className="text-gray-500 text-xs mt-1">{exp.descripcion}</p>}
+                        <p className="text-gray-500 text-xs">
+                          {exp.empresa}{exp.ciudadExp ? ` · ${exp.ciudadExp}` : ""}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          {exp.inicio} — {exp.esActual ? "Presente" : (exp.fin || "—")}
+                        </p>
+                        {exp.descripcion && (
+                          <p className="text-gray-500 text-xs mt-1 leading-relaxed">{exp.descripcion}</p>
+                        )}
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Educación */}
-              {edus.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Educación</p>
+              <div>
+                <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Educación</p>
+                {edus.length === 0 ? (
+                  <p className="text-sm text-gray-400 bg-gray-50 rounded-xl px-4 py-3">
+                    No ha registrado información educativa.
+                  </p>
+                ) : (
                   <div className="space-y-2">
                     {edus.map((edu, i) => (
                       <div key={i} className="bg-gray-50 rounded-xl p-3">
                         <p className="font-semibold text-azul-marino text-sm">{edu.titulo}</p>
-                        <p className="text-gray-500 text-xs">{edu.institucion}{edu.año ? ` · ${edu.año}` : ""}</p>
+                        <p className="text-gray-500 text-xs">
+                          {edu.institucion}{edu.año ? ` · ${edu.año}` : ""}
+                        </p>
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Documentos */}
+              <div>
+                <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Documentos</p>
+                <div className="flex flex-wrap gap-3">
+                  {cvUrl ? (
+                    <a
+                      href={cvUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-esmeralda text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                      📄 Descargar hoja de vida
+                    </a>
+                  ) : perfil.hoja_de_vida_url ? (
+                    <span className="flex items-center gap-2 bg-yellow-50 text-yellow-700 text-sm px-4 py-2.5 rounded-xl border border-yellow-200">
+                      📄 HV subida — sin permisos de acceso
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2 bg-gray-50 text-gray-400 text-sm px-4 py-2.5 rounded-xl">
+                      📄 Sin hoja de vida subida
+                    </span>
+                  )}
+
+                  {videoUrl ? (
+                    <a
+                      href={videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-azul-marino text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                      🎥 Ver video de presentación
+                    </a>
+                  ) : perfil.video_presentacion_url ? (
+                    <span className="flex items-center gap-2 bg-yellow-50 text-yellow-700 text-sm px-4 py-2.5 rounded-xl border border-yellow-200">
+                      🎥 Video subido — sin permisos de acceso
+                    </span>
+                  ) : null}
                 </div>
-              )}
-
-              {/* Archivos */}
-              <div className="flex flex-wrap gap-3">
-                {cvUrl ? (
-                  <a
-                    href={cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-esmeralda text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-                  >
-                    📄 Descargar hoja de vida
-                  </a>
-                ) : perfil.hoja_de_vida_url ? (
-                  <span className="flex items-center gap-2 bg-gray-100 text-gray-500 text-sm px-4 py-2.5 rounded-xl">
-                    📄 HV cargada (sin acceso)
-                  </span>
-                ) : null}
-
-                {videoUrl ? (
-                  <a
-                    href={videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-azul-marino text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
-                  >
-                    🎥 Ver video de presentación
-                  </a>
-                ) : perfil.video_presentacion_url ? (
-                  <span className="flex items-center gap-2 bg-gray-100 text-gray-500 text-sm px-4 py-2.5 rounded-xl">
-                    🎥 Video cargado (sin acceso)
-                  </span>
-                ) : null}
               </div>
             </>
           )}
