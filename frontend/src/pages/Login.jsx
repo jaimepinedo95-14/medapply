@@ -68,7 +68,7 @@ export default function Login() {
         </div>
 
         {/* Formulario */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-card p-8">
           <form onSubmit={enviar} noValidate className="space-y-5">
 
             {/* Error general */}
@@ -130,7 +130,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={cargando}
-              className="w-full bg-esmeralda hover:bg-esmeralda-hover text-white font-bold py-3.5 rounded-xl transition-colors disabled:opacity-60 text-base"
+              className="w-full bg-gradient-to-b from-[#0ba870] to-esmeralda-hover text-white font-bold py-3.5 rounded-xl shadow-btn hover:brightness-105 active:scale-[0.99] transition-all disabled:opacity-60 text-base"
             >
               {cargando ? "Iniciando sesión..." : "Iniciar sesión →"}
             </button>

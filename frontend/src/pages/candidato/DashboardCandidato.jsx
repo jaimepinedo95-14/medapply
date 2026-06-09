@@ -98,7 +98,7 @@ export default function DashboardCandidato() {
           { label: "Ofertas nuevas hoy",    valor: cargando ? "..." : String(stats.ofertasHoy),       icono: "🔔", color: "bg-green-50 border-green-100" },
           { label: "Perfil completado",     valor: cargando ? "..." : `${stats.porcentajePerfil}%`,  icono: "👤", color: "bg-yellow-50 border-yellow-100" },
         ].map((stat) => (
-          <div key={stat.label} className={`rounded-2xl border p-5 ${stat.color}`}>
+          <div key={stat.label} className={`rounded-2xl border p-5 shadow-card hover:shadow-card-hover transition-shadow duration-200 ${stat.color}`}>
             <div className="text-2xl mb-2">{stat.icono}</div>
             <p className="text-3xl font-bold text-azul-marino">{stat.valor}</p>
             <p className="text-gray-500 text-sm mt-1">{stat.label}</p>
@@ -163,14 +163,14 @@ export default function DashboardCandidato() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <Link to="/empleos" className="bg-esmeralda hover:bg-esmeralda-hover text-white rounded-2xl p-5 flex items-center gap-4 transition-colors">
+        <Link to="/empleos" className="bg-gradient-to-br from-[#0ba870] to-esmeralda-hover hover:brightness-105 text-white rounded-2xl p-5 flex items-center gap-4 transition-all shadow-btn active:scale-[0.99]">
           <span className="text-3xl">🔍</span>
           <div>
             <p className="font-bold">Buscar nuevas ofertas</p>
             <p className="text-green-100 text-sm">{stats.ofertasHoy} ofertas nuevas hoy</p>
           </div>
         </Link>
-        <Link to="/candidato/perfil" className="bg-azul-marino hover:bg-azul-hover text-white rounded-2xl p-5 flex items-center gap-4 transition-colors">
+        <Link to="/candidato/perfil" className="bg-gradient-to-br from-azul-claro to-azul-marino hover:brightness-105 text-white rounded-2xl p-5 flex items-center gap-4 transition-all shadow-btn active:scale-[0.99]">
           <span className="text-3xl">📝</span>
           <div>
             <p className="font-bold">Completar mi perfil</p>

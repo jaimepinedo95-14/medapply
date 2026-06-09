@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,22 +8,87 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: #ffffff;
-  color: #1e3a5f;
+html {
+  scroll-behavior: smooth;
 }
 
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  background-color: #f8fafc;
+  color: #1e3a5f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* ── Scrollbar refinada ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Focus ring global ── */
+*:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Selección de texto ── */
+::selection { background: #059669; color: white; }
+
 @layer components {
+
+  /* ── Botones ── */
   .btn-primario {
-    @apply bg-esmeralda text-white font-semibold px-6 py-3 rounded-lg hover:bg-esmeralda-hover transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           bg-gradient-to-b from-[#0ba870] to-esmeralda-hover
+           text-white font-semibold px-5 py-2.5 rounded-xl
+           shadow-btn hover:shadow-md hover:brightness-105
+           active:scale-[0.98] transition-all duration-150 cursor-pointer;
   }
 
   .btn-secundario {
-    @apply bg-azul-marino text-white font-semibold px-6 py-3 rounded-lg hover:bg-azul-hover transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           bg-gradient-to-b from-azul-claro to-azul-marino
+           text-white font-semibold px-5 py-2.5 rounded-xl
+           shadow-btn hover:shadow-md hover:brightness-105
+           active:scale-[0.98] transition-all duration-150 cursor-pointer;
   }
 
   .btn-outline {
-    @apply border-2 border-azul-marino text-azul-marino font-semibold px-6 py-3 rounded-lg hover:bg-azul-marino hover:text-white transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           border-2 border-azul-marino text-azul-marino font-semibold px-5 py-2.5 rounded-xl
+           hover:bg-azul-marino hover:text-white
+           active:scale-[0.98] transition-all duration-200 cursor-pointer;
+  }
+
+  /* ── Tarjetas ── */
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-card
+           hover:shadow-card-hover transition-shadow duration-200;
+  }
+
+  /* ── Campos de formulario ── */
+  .input-field {
+    @apply w-full border border-gray-200 bg-white rounded-xl px-4 py-2.5 text-sm
+           outline-none placeholder:text-gray-400
+           focus:border-esmeralda focus:ring-2 focus:ring-esmeralda/10
+           transition-all duration-150;
+  }
+
+  /* ── Badge genérico ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* ── Overlay modal ── */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4
+           backdrop-blur-[2px] animate-fade-in;
+  }
+
+  .modal-box {
+    @apply bg-white rounded-2xl shadow-modal w-full animate-slide-up;
   }
 }

@@ -66,7 +66,7 @@ function ProgressRing({ pct }) {
   );
 }
 
-function TarjetaSeccion({ icono, titulo, puntos, completada, hint, abierta, onToggle, children }) {
+function TarjetaSeccion({ icono, titulo, puntos, completada, hint, abierta, onToggle, opcional, children }) {
   return (
     <div className={`rounded-2xl border-2 bg-white shadow-sm overflow-hidden transition-colors ${
       completada ? "border-esmeralda/40" : abierta ? "border-azul-claro/50" : "border-gray-100 hover:border-gray-200"
@@ -78,7 +78,12 @@ function TarjetaSeccion({ icono, titulo, puntos, completada, hint, abierta, onTo
           {completada ? "✅" : icono}
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`font-semibold text-sm ${completada ? "text-azul-marino" : "text-gray-700"}`}>{titulo}</p>
+          <div className="flex items-center gap-2">
+            <p className={`font-semibold text-sm ${completada ? "text-azul-marino" : "text-gray-700"}`}>{titulo}</p>
+            {opcional && (
+              <span className="text-xs bg-gray-100 text-gray-500 font-medium px-2 py-0.5 rounded-full">Opcional</span>
+            )}
+          </div>
           <p className="text-xs text-gray-400 mt-0.5 truncate">
             {completada
               ? (hint || "Completado · toca para editar")
@@ -390,7 +395,7 @@ export default function PerfilCandidato() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto pb-24">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto pb-44">
 
       {/* ── Hero de progreso ── */}
       <div className="bg-gradient-to-br from-azul-marino via-azul-claro to-azul-marino text-white rounded-3xl p-6 mb-6 flex flex-col sm:flex-row items-center gap-6">
@@ -785,7 +790,7 @@ export default function PerfilCandidato() {
 
         {/* 7. Video de presentación */}
         <TarjetaSeccion
-          icono="🎥" titulo="Video de presentación" puntos={5}
+          icono="🎥" titulo="Video de presentación" puntos={5} opcional
           completada={!!perfil.videoNombre}
           hint={perfil.videoNombre || undefined}
           abierta={seccion === "video"}
@@ -822,7 +827,7 @@ export default function PerfilCandidato() {
       </div>
 
       {/* ── Botón guardar fijo ── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-gray-100 px-4 py-3 z-10">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 px-4 py-3 z-30">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <div className="flex-1">
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">

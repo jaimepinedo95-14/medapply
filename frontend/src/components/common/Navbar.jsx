@@ -183,26 +183,27 @@ export default function Navbar() {
   const cerrarMenu = () => setMenuAbierto(false);
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="bg-white shadow-nav sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16 gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-esmeralda rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">+</span>
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+            <div className="w-8 h-8 bg-gradient-to-br from-esmeralda-claro to-esmeralda-hover rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+              <span className="text-white font-bold text-lg leading-none">+</span>
             </div>
-            <span className="font-bold text-xl">
+            <span className="font-bold text-xl tracking-tight">
               <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
             </span>
           </Link>
 
           {/* Links centrales — escritorio */}
-          <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {LINKS_NAV.map((l) => (
               <Link key={l.href} to={l.href}
-                className="text-gray-600 hover:text-azul-marino font-medium transition-colors text-sm">
+                className="relative text-gray-600 hover:text-azul-marino font-medium transition-colors text-sm px-3 py-2 rounded-lg hover:bg-gray-50 group">
                 {l.label}
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-esmeralda scale-x-0 group-hover:scale-x-100 transition-transform duration-200 rounded-full" />
               </Link>
             ))}
           </div>

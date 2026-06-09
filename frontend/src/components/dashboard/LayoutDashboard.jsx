@@ -102,12 +102,15 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
                 key={link.ruta}
                 to={link.ruta}
                 onClick={cerrarMenu}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-sm font-medium transition-colors duration-150
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all duration-150
                   ${activo
-                    ? "bg-white/15 text-white"
+                    ? "bg-white/15 text-white shadow-sm"
                     : "text-blue-200 hover:bg-white/10 hover:text-white"
                   }`}
               >
+                {activo && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-esmeralda-claro rounded-r-full" />
+                )}
                 {link.icono}
                 {link.etiqueta}
               </Link>

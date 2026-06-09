@@ -57,8 +57,8 @@ function ModalPerfilCandidato({ usuario, onCerrar }) {
   const edus = Array.isArray(perfil?.educaciones)  ? perfil.educaciones  : [];
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onCerrar}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
 
         {/* Header con foto prominente */}
         <div className="p-5 border-b border-gray-100 flex items-start justify-between gap-4">
@@ -229,8 +229,8 @@ function ModalPerfilEmpresa({ usuario, onCerrar }) {
   }, [usuario.id]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onCerrar}>
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="p-5 border-b border-gray-100 flex items-start justify-between">
           <div className="flex items-center gap-3">
             {perfil?.logo ? (
@@ -507,8 +507,8 @@ export default function GestionUsuarios() {
 
       {/* Modal cambio de rol */}
       {modalRol && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setModalRol(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-100">
               <h3 className="font-bold text-azul-marino text-lg">Cambiar rol del usuario</h3>
               <p className="text-gray-500 text-sm mt-1"><strong>{modalRol.nombre}</strong> — {modalRol.email}</p>
