@@ -1,6 +1,3 @@
-// Perfil de candidato — filosofía de simplicidad total
-// Cada sección es completamente opcional y contribuye al % del perfil
-// Perfiles con mayor % aparecen primero en búsquedas de empresas
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
@@ -15,37 +12,34 @@ const CATEGORIAS = [
   "Personal administrativo", "Tecnólogo en Radiología", "Otro",
 ];
 
-// Ciudades desde configuración regional — se actualiza automáticamente al cambiar de país
 const CIUDADES = [...REGION.ciudades, "Otra"];
 
-// Secciones del perfil con su peso en porcentaje
 const SECCIONES_CONFIG = [
-  { key: "foto",       pts: 10, label: "Foto de perfil",           icono: "📷" },
-  { key: "basicos",    pts: 20, label: "Información básica",        icono: "📋" },
-  { key: "telefono",   pts:  5, label: "Teléfono de contacto",     icono: "📞" },
-  { key: "rethus",     pts: 15, label: "Verificación ReTHUS",       icono: "🏅" },
-  { key: "experiencia",pts: 20, label: "Experiencia laboral",       icono: "💼" },
-  { key: "educacion",  pts: 15, label: "Educación",                 icono: "🎓" },
-  { key: "cv",         pts: 10, label: "Hoja de vida PDF",          icono: "📄" },
-  { key: "video",      pts:  5, label: "Video de presentación",     icono: "🎥" },
+  { key: "foto",        pts: 10, label: "Foto de perfil",       icono: "📷" },
+  { key: "basicos",     pts: 20, label: "Información básica",   icono: "📋" },
+  { key: "telefono",    pts:  5, label: "Teléfono de contacto", icono: "📞" },
+  { key: "rethus",      pts: 15, label: "Verificación ReTHUS",  icono: "🏅" },
+  { key: "experiencia", pts: 20, label: "Experiencia laboral",  icono: "💼" },
+  { key: "educacion",   pts: 15, label: "Educación",            icono: "🎓" },
+  { key: "cv",          pts: 10, label: "Hoja de vida PDF",     icono: "📄" },
+  { key: "video",       pts:  5, label: "Video presentación",   icono: "🎥" },
 ];
 
 function calcularProgreso(p) {
   let pts = 0;
-  if (p.fotoPreview)                pts += 10;
-  if (p.categoria && p.ciudad)      pts += 20;
-  if (p.telefono)                   pts +=  5;
-  if (p.tarjetaReTHUS)              pts += 15;
-  if (p.experiencias.length > 0)    pts += 20;
-  if (p.educaciones.length > 0)     pts += 15;
-  if (p.cvNombre)                   pts += 10;
-  if (p.videoNombre)                pts +=  5;
-  return pts; // máx 100
+  if (p.fotoPreview)              pts += 10;
+  if (p.categoria && p.ciudad)    pts += 20;
+  if (p.telefono)                 pts +=  5;
+  if (p.tarjetaReTHUS)            pts += 15;
+  if (p.experiencias.length > 0)  pts += 20;
+  if (p.educaciones.length > 0)   pts += 15;
+  if (p.cvNombre)                 pts += 10;
+  if (p.videoNombre)              pts +=  5;
+  return pts;
 }
 
-// Anillo SVG de progreso
 function ProgressRing({ pct }) {
-  const r = 52;
+  const r    = 52;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
   return (
@@ -72,15 +66,15 @@ function ProgressRing({ pct }) {
   );
 }
 
-// Tarjeta expandible para cada sección del perfil
 function TarjetaSeccion({ icono, titulo, puntos, completada, hint, abierta, onToggle, children }) {
   return (
-    <div className={`rounded-2xl border-2 bg-white shadow-sm overflow-hidden transition-colors ${completada ? "border-esmeralda/40" : abierta ? "border-azul-claro/50" : "border-gray-100 hover:border-gray-200"}`}>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 px-5 py-4 text-left group"
-      >
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-colors ${completada ? "bg-esmeralda/15" : "bg-gray-50 group-hover:bg-gray-100"}`}>
+    <div className={`rounded-2xl border-2 bg-white shadow-sm overflow-hidden transition-colors ${
+      completada ? "border-esmeralda/40" : abierta ? "border-azul-claro/50" : "border-gray-100 hover:border-gray-200"
+    }`}>
+      <button onClick={onToggle} className="w-full flex items-center gap-3 px-5 py-4 text-left group">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-colors ${
+          completada ? "bg-esmeralda/15" : "bg-gray-50 group-hover:bg-gray-100"
+        }`}>
           {completada ? "✅" : icono}
         </div>
         <div className="flex-1 min-w-0">
@@ -114,18 +108,21 @@ export default function PerfilCandidato() {
   const { usuario } = useAuth();
 
   const [perfil, setPerfil] = useState({
-    fotoPreview: null,
-    categoria: "",
-    ciudad: "",
-    telefono: "",
+    fotoPreview:   null,   // base64 o URL pública desde Storage
+    fotoStoredUrl: null,   // URL actualmente guardada en DB
+    categoria:     "",
+    ciudad:        "",
+    telefono:      "",
     tarjetaReTHUS: "",
-    experiencias: [],
-    educaciones: [],
-    cvNombre: null,
-    videoNombre: null,
+    experiencias:  [],
+    educaciones:   [],
+    cvNombre:      null,   // nombre para mostrar
+    cvStoredPath:  null,   // path en bucket 'cvs'
+    videoNombre:   null,
+    videoStoredPath: null,
   });
 
-  const [seccion, setSeccion]       = useState(null);
+  const [seccion, setSeccion]           = useState(null);
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
 
   const [formExp, setFormExp] = useState({
@@ -135,21 +132,25 @@ export default function PerfilCandidato() {
   const [errExp, setErrExp] = useState({});
 
   const [formEdu, setFormEdu] = useState({ titulo: "", institucion: "", año: "" });
-  const [errEdu, setErrEdu] = useState({});
+  const [errEdu, setErrEdu]   = useState({});
 
   const [videoError, setVideoError] = useState(null);
   const [guardando, setGuardando]   = useState(false);
   const [guardado, setGuardado]     = useState(false);
+  const [errorGuardar, setErrorGuardar] = useState(null);
 
-  const fotoRef  = useRef();
-  const cvRef    = useRef();
-  const videoRef = useRef();
+  // Refs para archivos pendientes de subir
+  const fotoRef      = useRef();
+  const cvRef        = useRef();
+  const videoRef     = useRef();
+  const fotoFileRef  = useRef(null);
+  const cvFileRef    = useRef(null);
+  const videoFileRef = useRef(null);
 
-  const pct = calcularProgreso(perfil);
-
+  const pct    = calcularProgreso(perfil);
   const toggle = (nombre) => setSeccion((s) => (s === nombre ? null : nombre));
 
-  // Cargar perfil existente desde Supabase al montar
+  // Cargar perfil existente desde Supabase
   useEffect(() => {
     if (!usuario?.id) { setCargandoPerfil(false); return; }
     supabase
@@ -159,13 +160,31 @@ export default function PerfilCandidato() {
       .single()
       .then(({ data }) => {
         if (data) {
+          const exps = Array.isArray(data.experiencias)
+            ? data.experiencias.map((e, i) => ({ ...e, id: e.id || Date.now() + i }))
+            : [];
+          const edus = Array.isArray(data.educaciones)
+            ? data.educaciones.map((e, i) => ({ ...e, id: e.id || Date.now() + i + 1000 }))
+            : [];
+
           setPerfil((p) => ({
             ...p,
-            fotoPreview: data.foto || null,
-            categoria: data.categoria_profesional || "",
-            ciudad: data.ciudad || "",
-            telefono: data.telefono || "",
-            tarjetaReTHUS: data.numero_tarjeta_profesional || "",
+            fotoPreview:    data.foto || null,
+            fotoStoredUrl:  data.foto || null,
+            categoria:      data.categoria_profesional     || "",
+            ciudad:         data.ciudad                    || "",
+            telefono:       data.telefono                  || "",
+            tarjetaReTHUS:  data.numero_tarjeta_profesional || "",
+            experiencias:   exps,
+            educaciones:    edus,
+            cvNombre:       data.hoja_de_vida_url
+              ? decodeURIComponent(data.hoja_de_vida_url.split("/").pop().split("?")[0])
+              : null,
+            cvStoredPath:   data.hoja_de_vida_url || null,
+            videoNombre:    data.video_presentacion_url
+              ? decodeURIComponent(data.video_presentacion_url.split("/").pop().split("?")[0])
+              : null,
+            videoStoredPath: data.video_presentacion_url || null,
           }));
         }
         setCargandoPerfil(false);
@@ -173,11 +192,12 @@ export default function PerfilCandidato() {
       .catch(() => setCargandoPerfil(false));
   }, [usuario?.id]);
 
-  // === Handlers ===
+  // ── Handlers de archivos ──────────────────────────────────────────────────
 
   const handleFoto = (e) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
+    fotoFileRef.current = file;
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPerfil((p) => ({ ...p, fotoPreview: ev.target.result }));
@@ -186,52 +206,12 @@ export default function PerfilCandidato() {
     reader.readAsDataURL(file);
   };
 
-  const guardarBasicos = () => {
-    if (perfil.categoria && perfil.ciudad) setSeccion(null);
-  };
-
-  const guardarReTHUS = () => {
-    if (perfil.tarjetaReTHUS.trim()) setSeccion(null);
-  };
-
-  const agregarExperiencia = () => {
-    const e = {};
-    if (!formExp.cargo.trim())   e.cargo   = "Campo obligatorio";
-    if (!formExp.empresa.trim()) e.empresa  = "Campo obligatorio";
-    if (!formExp.inicio.trim())  e.inicio   = "Campo obligatorio";
-    if (Object.keys(e).length)   { setErrExp(e); return; }
-    setPerfil((p) => ({
-      ...p,
-      experiencias: [...p.experiencias, { ...formExp, id: Date.now() }],
-    }));
-    setFormExp({ cargo: "", empresa: "", ciudadExp: "", inicio: "", fin: "", esActual: false, descripcion: "" });
-    setErrExp({});
-  };
-
-  const quitarExperiencia = (id) =>
-    setPerfil((p) => ({ ...p, experiencias: p.experiencias.filter((x) => x.id !== id) }));
-
-  const agregarEducacion = () => {
-    const e = {};
-    if (!formEdu.titulo.trim())      e.titulo      = "Campo obligatorio";
-    if (!formEdu.institucion.trim()) e.institucion = "Campo obligatorio";
-    if (Object.keys(e).length)        { setErrEdu(e); return; }
-    setPerfil((p) => ({
-      ...p,
-      educaciones: [...p.educaciones, { ...formEdu, id: Date.now() }],
-    }));
-    setFormEdu({ titulo: "", institucion: "", año: "" });
-    setErrEdu({});
-  };
-
-  const quitarEducacion = (id) =>
-    setPerfil((p) => ({ ...p, educaciones: p.educaciones.filter((x) => x.id !== id) }));
-
   const handleCV = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type !== "application/pdf") return;
     if (file.size > 5 * 1024 * 1024) return;
+    cvFileRef.current = file;
     setPerfil((p) => ({ ...p, cvNombre: file.name }));
     setSeccion(null);
   };
@@ -249,37 +229,146 @@ export default function PerfilCandidato() {
         setVideoError("El video supera los 60 segundos. Por favor usa un video más corto.");
         return;
       }
+      videoFileRef.current = file;
       setPerfil((p) => ({ ...p, videoNombre: file.name }));
       setSeccion(null);
     };
     vid.src = url;
   };
 
+  // ── Guardar sección básicos / ReTHUS ──────────────────────────────────────
+
+  const guardarBasicos  = () => { if (perfil.categoria && perfil.ciudad) setSeccion(null); };
+  const guardarReTHUS   = () => { if (perfil.tarjetaReTHUS.trim()) setSeccion(null); };
+
+  // ── Experiencias ─────────────────────────────────────────────────────────
+
+  const agregarExperiencia = () => {
+    const e = {};
+    if (!formExp.cargo.trim())   e.cargo   = "Campo obligatorio";
+    if (!formExp.empresa.trim()) e.empresa = "Campo obligatorio";
+    if (!formExp.inicio.trim())  e.inicio  = "Campo obligatorio";
+    if (Object.keys(e).length) { setErrExp(e); return; }
+    setPerfil((p) => ({
+      ...p,
+      experiencias: [...p.experiencias, { ...formExp, id: Date.now() }],
+    }));
+    setFormExp({ cargo: "", empresa: "", ciudadExp: "", inicio: "", fin: "", esActual: false, descripcion: "" });
+    setErrExp({});
+  };
+
+  const quitarExperiencia = (id) =>
+    setPerfil((p) => ({ ...p, experiencias: p.experiencias.filter((x) => x.id !== id) }));
+
+  // ── Educaciones ───────────────────────────────────────────────────────────
+
+  const agregarEducacion = () => {
+    const e = {};
+    if (!formEdu.titulo.trim())      e.titulo      = "Campo obligatorio";
+    if (!formEdu.institucion.trim()) e.institucion = "Campo obligatorio";
+    if (Object.keys(e).length) { setErrEdu(e); return; }
+    setPerfil((p) => ({
+      ...p,
+      educaciones: [...p.educaciones, { ...formEdu, id: Date.now() }],
+    }));
+    setFormEdu({ titulo: "", institucion: "", año: "" });
+    setErrEdu({});
+  };
+
+  const quitarEducacion = (id) =>
+    setPerfil((p) => ({ ...p, educaciones: p.educaciones.filter((x) => x.id !== id) }));
+
+  // ── Guardar todo en Supabase ──────────────────────────────────────────────
+
   const guardarPerfil = async () => {
     if (!usuario?.id) return;
     setGuardando(true);
+    setErrorGuardar(null);
+
+    let fotoUrl   = perfil.fotoStoredUrl;
+    let cvPath    = perfil.cvStoredPath;
+    let videoPath = perfil.videoStoredPath;
+
     try {
+      // 1. Subir nueva foto de perfil
+      if (fotoFileRef.current) {
+        const file = fotoFileRef.current;
+        const ext  = file.name.split(".").pop();
+        const path = `${usuario.id}/foto.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("fotos-perfil")
+          .upload(path, file, { upsert: true });
+        if (!upErr) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("fotos-perfil")
+            .getPublicUrl(path);
+          fotoUrl = publicUrl;
+          fotoFileRef.current = null;
+          setPerfil((p) => ({ ...p, fotoPreview: publicUrl, fotoStoredUrl: publicUrl }));
+        }
+      }
+
+      // 2. Subir nueva hoja de vida (PDF)
+      if (cvFileRef.current) {
+        const file = cvFileRef.current;
+        const path = `${usuario.id}/cv.pdf`;
+        const { error: upErr } = await supabase.storage
+          .from("cvs")
+          .upload(path, file, { upsert: true });
+        if (!upErr) {
+          cvPath = path;
+          cvFileRef.current = null;
+          setPerfil((p) => ({ ...p, cvStoredPath: path }));
+        }
+      }
+
+      // 3. Subir nuevo video de presentación
+      if (videoFileRef.current) {
+        const file = videoFileRef.current;
+        const ext  = file.name.split(".").pop();
+        const path = `${usuario.id}/video.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("videos")
+          .upload(path, file, { upsert: true });
+        if (!upErr) {
+          videoPath = path;
+          videoFileRef.current = null;
+          setPerfil((p) => ({ ...p, videoStoredPath: path }));
+        }
+      }
+
+      // 4. Guardar todos los datos del perfil
       const { error } = await supabase
         .from("perfiles_candidato")
-        .update({
-          categoria_profesional:      perfil.categoria,
-          ciudad:                     perfil.ciudad,
-          telefono:                   perfil.telefono,
-          numero_tarjeta_profesional: perfil.tarjetaReTHUS,
-          porcentaje_perfil:          pct,
-          updated_at:                 new Date().toISOString(),
-        })
-        .eq("usuario_id", usuario.id);
+        .upsert(
+          {
+            usuario_id:                 usuario.id,
+            foto:                       fotoUrl,
+            categoria_profesional:      perfil.categoria,
+            ciudad:                     perfil.ciudad,
+            telefono:                   perfil.telefono,
+            numero_tarjeta_profesional: perfil.tarjetaReTHUS,
+            porcentaje_perfil:          pct,
+            experiencias:               perfil.experiencias,
+            educaciones:                perfil.educaciones,
+            hoja_de_vida_url:           cvPath,
+            video_presentacion_url:     videoPath,
+            updated_at:                 new Date().toISOString(),
+          },
+          { onConflict: "usuario_id" }
+        );
 
       if (error) throw error;
       setGuardado(true);
       setTimeout(() => setGuardado(false), 3000);
     } catch (err) {
-      console.error("Error guardando perfil:", err.message);
+      setErrorGuardar(err.message);
     } finally {
       setGuardando(false);
     }
   };
+
+  // ── Renderizado ───────────────────────────────────────────────────────────
 
   const mensajeProgreso =
     pct === 100 ? "🎉 ¡Perfil completo! Apareces primero en las búsquedas de empresas."
@@ -290,6 +379,16 @@ export default function PerfilCandidato() {
 
   const nombreCorto = usuario?.nombre?.split(" ")[0] || "candidato";
 
+  if (cargandoPerfil) {
+    return (
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 bg-gray-100 rounded-2xl animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto pb-24">
 
@@ -299,8 +398,6 @@ export default function PerfilCandidato() {
         <div className="text-center sm:text-left flex-1">
           <h1 className="text-xl font-bold mb-1">¡Hola, {nombreCorto}! 👋</h1>
           <p className="text-blue-200 text-sm mb-4 leading-relaxed">{mensajeProgreso}</p>
-
-          {/* Mini-checklist de secciones */}
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
             {[
               { label: "Básico",      done: !!(perfil.categoria && perfil.ciudad) },
@@ -312,18 +409,26 @@ export default function PerfilCandidato() {
             ].map((item) => (
               <span
                 key={item.label}
-                className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${item.done ? "bg-esmeralda text-white" : "bg-white/10 text-blue-200"}`}
+                className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  item.done ? "bg-esmeralda text-white" : "bg-white/10 text-blue-200"
+                }`}
               >
                 {item.done ? "✓ " : ""}{item.label}
               </span>
             ))}
           </div>
-
           <p className="text-blue-300 text-xs mt-3">
             Los perfiles al 100% reciben <strong className="text-white">5× más visitas</strong> de empresas.
           </p>
         </div>
       </div>
+
+      {/* Error de guardado */}
+      {errorGuardar && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-red-700 text-sm">
+          ❌ {errorGuardar}
+        </div>
+      )}
 
       {/* ── Secciones del perfil ── */}
       <div className="space-y-3">
@@ -400,8 +505,7 @@ export default function PerfilCandidato() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-azul-marino mb-1.5">
-                Teléfono{" "}
-                <span className="text-gray-400 font-normal">(opcional · +5% al perfil)</span>
+                Teléfono <span className="text-gray-400 font-normal">(opcional · +5% al perfil)</span>
               </label>
               <input
                 type="tel"
@@ -421,7 +525,7 @@ export default function PerfilCandidato() {
           </div>
         </TarjetaSeccion>
 
-        {/* 3. Verificación de registro profesional — nombre varía por país (ReTHUS, SERUMS, etc.) */}
+        {/* 3. Verificación ReTHUS */}
         <TarjetaSeccion
           icono="🏅" titulo={`Verificación ${REGION.registroProfesional.nombre}`} puntos={15}
           completada={!!perfil.tarjetaReTHUS}
@@ -431,10 +535,12 @@ export default function PerfilCandidato() {
         >
           <div className="space-y-4 pt-1">
             <div className="bg-green-50 border border-green-100 rounded-xl p-3">
-              <p className="text-xs font-semibold text-green-800 mb-1">¿Qué es el badge Verificado {REGION.registroProfesional.nombre}?</p>
+              <p className="text-xs font-semibold text-green-800 mb-1">
+                ¿Qué es el badge Verificado {REGION.registroProfesional.nombre}?
+              </p>
               <p className="text-xs text-green-700 leading-relaxed">
                 {REGION.registroProfesional.nombreCompleto} de la {REGION.registroProfesional.entidad}.
-                Añadir tu número activa un badge verde en tu perfil que genera más confianza en las empresas.
+                Añadir tu número activa un badge verde en tu perfil.
               </p>
             </div>
             <div>
@@ -449,11 +555,9 @@ export default function PerfilCandidato() {
                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-azul-claro"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Consúltalo en el portal de {REGION.registroProfesional.entidad}: {REGION.registroProfesional.url}
+                Consúltalo en: {REGION.registroProfesional.url}
               </p>
             </div>
-
-            {/* Preview del badge */}
             {perfil.tarjetaReTHUS && (
               <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
                 <span className="text-xl">✅</span>
@@ -463,7 +567,6 @@ export default function PerfilCandidato() {
                 </div>
               </div>
             )}
-
             <button
               onClick={guardarReTHUS}
               disabled={!perfil.tarjetaReTHUS.trim()}
@@ -485,8 +588,6 @@ export default function PerfilCandidato() {
           onToggle={() => toggle("experiencia")}
         >
           <div className="space-y-4 pt-1">
-
-            {/* Experiencias ya añadidas */}
             {perfil.experiencias.length > 0 && (
               <div className="space-y-2">
                 {perfil.experiencias.map((exp) => (
@@ -510,12 +611,8 @@ export default function PerfilCandidato() {
                 ))}
               </div>
             )}
-
-            {/* Formulario para añadir */}
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
-              <p className="text-xs font-semibold text-azul-marino mb-3 uppercase tracking-wide">
-                + Añadir experiencia
-              </p>
+              <p className="text-xs font-semibold text-azul-marino mb-3 uppercase tracking-wide">+ Añadir experiencia</p>
               <div className="space-y-2.5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
@@ -537,47 +634,38 @@ export default function PerfilCandidato() {
                     {errExp.empresa && <p className="text-red-500 text-xs mt-0.5">{errExp.empresa}</p>}
                   </div>
                 </div>
-
                 <input
                   value={formExp.ciudadExp}
                   onChange={(e) => setFormExp((f) => ({ ...f, ciudadExp: e.target.value }))}
                   placeholder="Ciudad (opcional)"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro"
                 />
-
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <input
                       value={formExp.inicio}
                       onChange={(e) => { setFormExp((f) => ({ ...f, inicio: e.target.value })); setErrExp((er) => ({ ...er, inicio: null })); }}
-                      placeholder="Año inicio *"
-                      type="number" min="1970" max="2030"
+                      placeholder="Año inicio *" type="number" min="1970" max="2030"
                       className={`w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro ${errExp.inicio ? "border-red-400 bg-red-50" : "border-gray-200"}`}
                     />
                     {errExp.inicio && <p className="text-red-500 text-xs mt-0.5">{errExp.inicio}</p>}
                   </div>
-                  <div>
-                    <input
-                      value={formExp.fin}
-                      onChange={(e) => setFormExp((f) => ({ ...f, fin: e.target.value }))}
-                      placeholder="Año fin"
-                      type="number" min="1970" max="2030"
-                      disabled={formExp.esActual}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro disabled:bg-gray-100 disabled:text-gray-400"
-                    />
-                  </div>
+                  <input
+                    value={formExp.fin}
+                    onChange={(e) => setFormExp((f) => ({ ...f, fin: e.target.value }))}
+                    placeholder="Año fin" type="number" min="1970" max="2030"
+                    disabled={formExp.esActual}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro disabled:bg-gray-100 disabled:text-gray-400"
+                  />
                 </div>
-
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="checkbox"
-                    checked={formExp.esActual}
+                    type="checkbox" checked={formExp.esActual}
                     onChange={(e) => setFormExp((f) => ({ ...f, esActual: e.target.checked, fin: e.target.checked ? "" : f.fin }))}
                     className="accent-esmeralda"
                   />
                   <span className="text-sm text-gray-600">Actualmente trabajo aquí</span>
                 </label>
-
                 <textarea
                   value={formExp.descripcion}
                   onChange={(e) => setFormExp((f) => ({ ...f, descripcion: e.target.value }))}
@@ -585,7 +673,6 @@ export default function PerfilCandidato() {
                   rows={2}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro resize-none"
                 />
-
                 <button
                   onClick={agregarExperiencia}
                   className="w-full bg-azul-marino hover:bg-azul-claro text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
@@ -608,7 +695,6 @@ export default function PerfilCandidato() {
           onToggle={() => toggle("educacion")}
         >
           <div className="space-y-4 pt-1">
-
             {perfil.educaciones.length > 0 && (
               <div className="space-y-2">
                 {perfil.educaciones.map((edu) => (
@@ -628,11 +714,8 @@ export default function PerfilCandidato() {
                 ))}
               </div>
             )}
-
             <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
-              <p className="text-xs font-semibold text-azul-marino mb-3 uppercase tracking-wide">
-                + Añadir estudio
-              </p>
+              <p className="text-xs font-semibold text-azul-marino mb-3 uppercase tracking-wide">+ Añadir estudio</p>
               <div className="space-y-2.5">
                 <div>
                   <input
@@ -655,8 +738,7 @@ export default function PerfilCandidato() {
                 <input
                   value={formEdu.año}
                   onChange={(e) => setFormEdu((f) => ({ ...f, año: e.target.value }))}
-                  placeholder="Año de grado (opcional)"
-                  type="number" min="1970" max="2030"
+                  placeholder="Año de grado (opcional)" type="number" min="1970" max="2030"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-azul-claro"
                 />
                 <button
@@ -712,10 +794,9 @@ export default function PerfilCandidato() {
           <div className="space-y-3 pt-1">
             <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
               <p className="text-xs text-yellow-800 leading-relaxed">
-                💡 <strong>Consejo:</strong> Un video de 30–60 segundos presentándote y contando tu experiencia genera hasta 3× más interés de las empresas. No tiene que ser profesional — la autenticidad vale más.
+                💡 <strong>Consejo:</strong> Un video de 30–60 segundos genera hasta 3× más interés de las empresas.
               </p>
             </div>
-
             <div
               className="border-2 border-dashed border-gray-200 hover:border-esmeralda rounded-2xl p-7 text-center cursor-pointer transition-colors"
               onClick={() => videoRef.current?.click()}
@@ -734,16 +815,13 @@ export default function PerfilCandidato() {
                 </>
               )}
             </div>
-
-            {videoError && (
-              <p className="text-red-500 text-sm text-center">{videoError}</p>
-            )}
+            {videoError && <p className="text-red-500 text-sm text-center">{videoError}</p>}
             <input ref={videoRef} type="file" accept="video/*" className="hidden" onChange={handleVideo} />
           </div>
         </TarjetaSeccion>
       </div>
 
-      {/* ── Botón guardar fijo al fondo ── */}
+      {/* ── Botón guardar fijo ── */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-gray-100 px-4 py-3 z-10">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <div className="flex-1">
@@ -760,9 +838,13 @@ export default function PerfilCandidato() {
           <button
             onClick={guardarPerfil}
             disabled={guardando}
-            className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex-shrink-0 ${guardado ? "bg-green-500 text-white" : "bg-azul-marino hover:bg-azul-claro text-white"} disabled:opacity-60`}
+            className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex-shrink-0 ${
+              guardado
+                ? "bg-green-500 text-white"
+                : "bg-azul-marino hover:bg-azul-claro text-white"
+            } disabled:opacity-60`}
           >
-            {guardando ? "..." : guardado ? "✅ Guardado" : "Guardar"}
+            {guardando ? "Guardando..." : guardado ? "✅ Guardado" : "Guardar"}
           </button>
         </div>
       </div>

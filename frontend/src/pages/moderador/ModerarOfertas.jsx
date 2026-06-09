@@ -1,76 +1,37 @@
-// Panel de moderación de ofertas — aprobar, pausar o rechazar ofertas pendientes
-import { useState } from "react";
-
-const OFERTAS_PENDIENTES_DEMO = [
-  {
-    id: 101, cargo: "Médico General Urgencias", empresa: "Clínica Nuevo Horizonte",
-    ciudad: "Pereira", categoria: "Médico general", tipoContrato: "Tiempo completo",
-    salario: "4.800.000", fechaEnvio: "2026-06-07 09:14",
-    descripcion: "Buscamos Médico General para sala de urgencias 24 horas...",
-    estado: "pendiente",
-  },
-  {
-    id: 102, cargo: "Enfermero/a UCI Neonatal", empresa: "Hospital San Jorge",
-    ciudad: "Armenia", categoria: "Enfermero/a", tipoContrato: "Por turnos",
-    salario: "3.800.000", fechaEnvio: "2026-06-07 10:30",
-    descripcion: "Requerimos Enfermero/a para UCI Neonatal con experiencia mínima...",
-    estado: "pendiente",
-  },
-  {
-    id: 103, cargo: "Auxiliar Laboratorio Clínico", empresa: "Lab. Diagnóstico Plus",
-    ciudad: "Manizales", categoria: "Bacteriólogo/a", tipoContrato: "Medio tiempo",
-    salario: "1.900.000", fechaEnvio: "2026-06-06 16:45",
-    descripcion: "Laboratorio clínico de alta complejidad requiere Auxiliar...",
-    estado: "pendiente",
-  },
-  {
-    id: 104, cargo: "Psicólogo Organizacional", empresa: "EPS Regional Norte",
-    ciudad: "Barranquilla", categoria: "Psicólogo/a", tipoContrato: "Tiempo completo",
-    salario: "3.200.000", fechaEnvio: "2026-06-06 14:20",
-    descripcion: "Empresa del sector salud requiere Psicólogo Organizacional...",
-    estado: "pendiente",
-  },
-  {
-    id: 105, cargo: "Conductor Ambulancia TAB", empresa: "Cruz Verde Ambulancias",
-    ciudad: "Bogotá", categoria: "Conductor de ambulancia", tipoContrato: "Por turnos",
-    salario: "1.750.000", fechaEnvio: "2026-06-05 11:00",
-    descripcion: "Requerimos conductores de ambulancia para turnos rotativos...",
-    estado: "pendiente",
-  },
-];
-
-const HISTORIAL_DEMO = [
-  { id: 95, cargo: "Odontólogo General",    empresa: "Colsubsidio",         accion: "aprobada",  fecha: "2026-06-06", moderador: "Laura Torres" },
-  { id: 96, cargo: "Fisioterapeuta",        empresa: "Centro Rehab. Sur",   accion: "pausada",   fecha: "2026-06-05", moderador: "Laura Torres" },
-  { id: 97, cargo: "Médico Especialista",   empresa: "Clínica Palermo",     accion: "aprobada",  fecha: "2026-06-05", moderador: "Laura Torres" },
-  { id: 98, cargo: "Auxiliar de Farmacia",  empresa: "Droguería La Salud",  accion: "rechazada", fecha: "2026-06-04", moderador: "Laura Torres" },
-];
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 
 const COLOR_ESTADO = {
   pendiente: "bg-yellow-100 text-yellow-700",
-  aprobada:  "bg-green-100 text-green-700",
+  activa:    "bg-green-100 text-green-700",
   pausada:   "bg-blue-100 text-blue-700",
-  rechazada: "bg-red-100 text-red-600",
+  eliminada: "bg-red-100 text-red-600",
 };
 
-const ICONO_ACCION = { aprobada: "✅", pausada: "⏸", rechazada: "❌" };
+// Cómo se llama la acción en historial según el estado resultante
+const LABEL_ACCION = { activa: "aprobada", pausada: "pausada", eliminada: "rechazada" };
+const ICONO_ACCION = { activa: "✅", pausada: "⏸", eliminada: "❌" };
 
 function ModalDetalle({ oferta, onAccion, onCerrar }) {
-  const [motivo, setMotivo] = useState("");
+  const [motivo, setMotivo]             = useState("");
   const [accionPendiente, setAccionPendiente] = useState(null);
 
   const confirmar = () => {
-    onAccion(oferta.id, accionPendiente, motivo);
+    onAccion(oferta.id, accionPendiente);
     onCerrar();
   };
+
+  const salario = oferta.salario_min
+    ? `$${oferta.salario_min.toLocaleString("es-CO")}${oferta.salario_max ? ` – $${oferta.salario_max.toLocaleString("es-CO")}` : ""}`
+    : "A convenir";
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
         <div className="p-5 border-b border-gray-100 flex items-start justify-between">
           <div>
-            <h3 className="font-bold text-azul-marino text-lg">{oferta.cargo}</h3>
-            <p className="text-gray-500 text-sm">{oferta.empresa} · {oferta.ciudad} · {oferta.categoria}</p>
+            <h3 className="font-bold text-azul-marino text-lg">{oferta.titulo}</h3>
+            <p className="text-gray-500 text-sm">{oferta.nombre_empresa} · {oferta.ciudad} · {oferta.categoria_profesional}</p>
           </div>
           <button onClick={onCerrar} className="text-gray-400 hover:text-gray-600 text-2xl ml-4">×</button>
         </div>
@@ -78,48 +39,68 @@ function ModalDetalle({ oferta, onAccion, onCerrar }) {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-xs text-gray-400">Contrato</p>
-              <p className="font-semibold text-azul-marino">{oferta.tipoContrato}</p>
+              <p className="font-semibold text-azul-marino">{oferta.tipo_contrato || "—"}</p>
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-xs text-gray-400">Salario</p>
-              <p className="font-semibold text-esmeralda">${oferta.salario} COP/mes</p>
+              <p className="font-semibold text-esmeralda">{salario} COP</p>
             </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-azul-marino mb-1.5">Descripción</p>
-            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3">{oferta.descripcion}</p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-azul-marino mb-1.5">Enviada el {oferta.fechaEnvio}</p>
-          </div>
 
-          {accionPendiente === "rechazada" && (
+          {oferta.descripcion && (
             <div>
-              <label className="block text-xs font-semibold text-azul-marino mb-1.5">Motivo del rechazo (opcional)</label>
-              <textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={2}
+              <p className="text-xs font-semibold text-azul-marino mb-1.5">Descripción</p>
+              <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3">{oferta.descripcion}</p>
+            </div>
+          )}
+          {oferta.requisitos && (
+            <div>
+              <p className="text-xs font-semibold text-azul-marino mb-1.5">Requisitos</p>
+              <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3">{oferta.requisitos}</p>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-400">
+            Publicada: {new Date(oferta.fecha_publicacion).toLocaleString("es-CO")}
+          </p>
+
+          {accionPendiente === "eliminada" && (
+            <div>
+              <label className="block text-xs font-semibold text-azul-marino mb-1.5">
+                Motivo del rechazo (opcional)
+              </label>
+              <textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                rows={2}
                 placeholder="Describe brevemente por qué se rechaza esta oferta..."
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-azul-claro resize-none" />
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-azul-claro resize-none"
+              />
             </div>
           )}
 
           {accionPendiente ? (
             <div className="flex gap-3">
-              <button onClick={confirmar}
+              <button
+                onClick={confirmar}
                 className={`flex-1 font-bold py-3 rounded-xl text-white transition-colors ${
-                  accionPendiente === "aprobada" ? "bg-esmeralda hover:bg-esmeralda-hover"
+                  accionPendiente === "activa"    ? "bg-esmeralda hover:bg-esmeralda-hover"
                   : accionPendiente === "pausada" ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-red-500 hover:bg-red-600"
-                }`}>
-                Confirmar {accionPendiente}
+                  :                                 "bg-red-500 hover:bg-red-600"
+                }`}
+              >
+                Confirmar {LABEL_ACCION[accionPendiente]}
               </button>
-              <button onClick={() => setAccionPendiente(null)}
-                className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50">
+              <button
+                onClick={() => setAccionPendiente(null)}
+                className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50"
+              >
                 Atrás
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              <button onClick={() => setAccionPendiente("aprobada")}
+              <button onClick={() => setAccionPendiente("activa")}
                 className="bg-green-50 text-green-700 hover:bg-green-100 font-bold py-3 rounded-xl transition-colors text-sm">
                 ✅ Aprobar
               </button>
@@ -127,7 +108,7 @@ function ModalDetalle({ oferta, onAccion, onCerrar }) {
                 className="bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold py-3 rounded-xl transition-colors text-sm">
                 ⏸ Pausar
               </button>
-              <button onClick={() => setAccionPendiente("rechazada")}
+              <button onClick={() => setAccionPendiente("eliminada")}
                 className="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-3 rounded-xl transition-colors text-sm">
                 ❌ Rechazar
               </button>
@@ -140,27 +121,60 @@ function ModalDetalle({ oferta, onAccion, onCerrar }) {
 }
 
 export default function ModerarOfertas() {
-  const [ofertas, setOfertas] = useState(OFERTAS_PENDIENTES_DEMO);
-  const [historial, setHistorial] = useState(HISTORIAL_DEMO);
-  const [detalle, setDetalle] = useState(null);
-  const [busqueda, setBusqueda] = useState("");
-  const [toast, setToast] = useState(null);
-  const [vista, setVista] = useState("pendientes"); // "pendientes" | "historial"
+  const [pendientes, setPendientes] = useState([]);
+  const [historial, setHistorial]   = useState([]);
+  const [detalle, setDetalle]       = useState(null);
+  const [busqueda, setBusqueda]     = useState("");
+  const [toast, setToast]           = useState(null);
+  const [vista, setVista]           = useState("pendientes");
+  const [cargando, setCargando]     = useState(true);
 
-  const accionRapida = (id, accion) => {
-    const oferta = ofertas.find((o) => o.id === id);
-    setOfertas((p) => p.filter((o) => o.id !== id));
-    setHistorial((p) => [
-      { id, cargo: oferta.cargo, empresa: oferta.empresa, accion, fecha: "2026-06-08", moderador: "Tú" },
-      ...p,
-    ]);
-    setToast({ accion, cargo: oferta.cargo });
-    setTimeout(() => setToast(null), 3000);
-  };
+  useEffect(() => { cargar(); }, []);
 
-  const pendientesFiltradas = ofertas.filter((o) => {
+  async function cargar() {
+    setCargando(true);
+    try {
+      const [{ data: pend }, { data: hist }] = await Promise.all([
+        supabase
+          .from("ofertas_con_empresa")
+          .select("*")
+          .eq("estado", "pendiente")
+          .order("fecha_publicacion", { ascending: true }),
+        supabase
+          .from("ofertas_con_empresa")
+          .select("*")
+          .neq("estado", "pendiente")
+          .order("fecha_publicacion", { ascending: false })
+          .limit(100),
+      ]);
+      setPendientes(pend || []);
+      setHistorial(hist || []);
+    } catch (_) {
+      // silencioso — se muestra vacío
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function ejecutarAccion(id, nuevoEstado) {
+    const oferta = pendientes.find((o) => o.id === id);
+    const { error } = await supabase.from("ofertas").update({ estado: nuevoEstado }).eq("id", id);
+    if (!error && oferta) {
+      setPendientes((p) => p.filter((o) => o.id !== id));
+      setHistorial((p) => [{ ...oferta, estado: nuevoEstado }, ...p]);
+      setToast({ estado: nuevoEstado, titulo: oferta.titulo });
+      setTimeout(() => setToast(null), 3000);
+    }
+  }
+
+  const pendientesFiltradas = pendientes.filter((o) => {
     const q = busqueda.toLowerCase();
-    return !busqueda || o.cargo.toLowerCase().includes(q) || o.empresa.toLowerCase().includes(q) || o.ciudad.toLowerCase().includes(q);
+    return (
+      !busqueda ||
+      o.titulo?.toLowerCase().includes(q) ||
+      o.nombre_empresa?.toLowerCase().includes(q) ||
+      o.ciudad?.toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -171,46 +185,60 @@ export default function ModerarOfertas() {
           <h1 className="text-2xl font-bold text-azul-marino">Panel de moderación</h1>
           <p className="text-gray-500 text-sm mt-1">Revisa y gestiona las ofertas pendientes de publicación.</p>
         </div>
-        <div className="flex gap-2">
-          <span className="bg-yellow-100 text-yellow-700 text-sm font-bold px-3 py-1.5 rounded-full">
-            {ofertas.length} pendientes
-          </span>
-        </div>
+        <span className="bg-yellow-100 text-yellow-700 text-sm font-bold px-3 py-1.5 rounded-full">
+          {pendientes.length} pendientes
+        </span>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-5">
         {[
-          { key: "pendientes", label: `📋 Pendientes (${ofertas.length})` },
+          { key: "pendientes", label: `📋 Pendientes (${pendientes.length})` },
           { key: "historial",  label: `🗂 Historial (${historial.length})` },
         ].map((t) => (
-          <button key={t.key} onClick={() => setVista(t.key)}
+          <button
+            key={t.key}
+            onClick={() => setVista(t.key)}
             className={`px-5 py-3 text-sm font-semibold transition-colors ${
-              vista === t.key ? "text-azul-marino border-b-2 border-azul-marino" : "text-gray-400 hover:text-gray-600"
-            }`}>
+              vista === t.key
+                ? "text-azul-marino border-b-2 border-azul-marino"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
             {t.label}
           </button>
         ))}
       </div>
 
+      {/* ── Vista: Pendientes ── */}
       {vista === "pendientes" && (
         <>
-          {/* Búsqueda */}
           <div className="mb-5">
-            <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar oferta por cargo, empresa o ciudad..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-esmeralda" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por cargo, empresa o ciudad..."
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-esmeralda"
+            />
           </div>
 
-          {/* Lista de ofertas pendientes */}
-          {pendientesFiltradas.length === 0 ? (
+          {cargando ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-36 bg-gray-100 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : pendientesFiltradas.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="text-5xl mb-4">{busqueda ? "🔍" : "✅"}</div>
               <h3 className="font-bold text-azul-marino text-lg mb-2">
                 {busqueda ? "Sin resultados" : "¡Todo al día!"}
               </h3>
               <p className="text-gray-400 text-sm">
-                {busqueda ? "No hay ofertas que coincidan con tu búsqueda." : "No hay ofertas pendientes de moderación."}
+                {busqueda
+                  ? "No hay ofertas que coincidan con tu búsqueda."
+                  : "No hay ofertas pendientes de moderación."}
               </p>
             </div>
           ) : (
@@ -220,37 +248,53 @@ export default function ModerarOfertas() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h3 className="font-bold text-azul-marino">{oferta.cargo}</h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_ESTADO[oferta.estado]}`}>
-                          {oferta.estado}
+                        <h3 className="font-bold text-azul-marino">{oferta.titulo}</h3>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                          pendiente
                         </span>
+                        {oferta.urgente && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600">
+                            urgente
+                          </span>
+                        )}
                       </div>
-                      <p className="text-gray-500 text-sm">{oferta.empresa} · {oferta.ciudad} · {oferta.categoria}</p>
+                      <p className="text-gray-500 text-sm">
+                        {oferta.nombre_empresa} · {oferta.ciudad} · {oferta.categoria_profesional}
+                      </p>
                       <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-400">
-                        <span>📄 {oferta.tipoContrato}</span>
-                        <span>💰 ${oferta.salario}</span>
-                        <span>🕐 {oferta.fechaEnvio}</span>
+                        {oferta.tipo_contrato && <span>📄 {oferta.tipo_contrato}</span>}
+                        {oferta.salario_min && (
+                          <span>💰 ${oferta.salario_min.toLocaleString("es-CO")}</span>
+                        )}
+                        <span>🕐 {new Date(oferta.fecha_publicacion).toLocaleDateString("es-CO")}</span>
                       </div>
                     </div>
-                    <div className="flex-shrink-0 flex flex-col gap-2">
-                      <button onClick={() => setDetalle(oferta)}
-                        className="text-xs font-semibold px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                        Ver detalle
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setDetalle(oferta)}
+                      className="text-xs font-semibold px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 flex-shrink-0"
+                    >
+                      Ver detalle
+                    </button>
                   </div>
+
                   {/* Acciones rápidas */}
                   <div className="flex gap-2 mt-4 pt-4 border-t border-gray-50">
-                    <button onClick={() => accionRapida(oferta.id, "aprobada")}
-                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
+                    <button
+                      onClick={() => ejecutarAccion(oferta.id, "activa")}
+                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+                    >
                       ✅ Aprobar
                     </button>
-                    <button onClick={() => accionRapida(oferta.id, "pausada")}
-                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                    <button
+                      onClick={() => ejecutarAccion(oferta.id, "pausada")}
+                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                    >
                       ⏸ Pausar
                     </button>
-                    <button onClick={() => accionRapida(oferta.id, "rechazada")}
-                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+                    <button
+                      onClick={() => ejecutarAccion(oferta.id, "eliminada")}
+                      className="flex-1 text-xs font-semibold py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                    >
                       ❌ Rechazar
                     </button>
                   </div>
@@ -261,51 +305,65 @@ export default function ModerarOfertas() {
         </>
       )}
 
+      {/* ── Vista: Historial ── */}
       {vista === "historial" && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-5 py-3 text-left font-semibold text-azul-marino">Oferta</th>
-                  <th className="px-5 py-3 text-center font-semibold text-azul-marino">Acción</th>
-                  <th className="px-5 py-3 text-center font-semibold text-azul-marino hidden sm:table-cell">Fecha</th>
-                  <th className="px-5 py-3 text-left font-semibold text-azul-marino hidden md:table-cell">Moderador</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {historial.map((h) => (
-                  <tr key={`${h.id}-${h.fecha}`} className="hover:bg-gray-50">
-                    <td className="px-5 py-3">
-                      <p className="font-semibold text-azul-marino">{h.cargo}</p>
-                      <p className="text-gray-400 text-xs">{h.empresa}</p>
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_ESTADO[h.accion]}`}>
-                        {ICONO_ACCION[h.accion]} {h.accion}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-center text-gray-500 hidden sm:table-cell">{h.fecha}</td>
-                    <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{h.moderador}</td>
+          {historial.length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              <p className="text-4xl mb-3">🗂</p>
+              <p className="text-sm font-semibold text-gray-500">No hay historial de moderaciones aún.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-5 py-3 text-left font-semibold text-azul-marino">Oferta</th>
+                    <th className="px-5 py-3 text-center font-semibold text-azul-marino">Estado</th>
+                    <th className="px-5 py-3 text-center font-semibold text-azul-marino hidden sm:table-cell">Fecha</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {historial.map((h) => (
+                    <tr key={h.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3">
+                        <p className="font-semibold text-azul-marino">{h.titulo}</p>
+                        <p className="text-gray-400 text-xs">{h.nombre_empresa}</p>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_ESTADO[h.estado] || "bg-gray-100 text-gray-500"}`}>
+                          {ICONO_ACCION[h.estado] || ""} {LABEL_ACCION[h.estado] || h.estado}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-center text-gray-500 text-xs hidden sm:table-cell">
+                        {new Date(h.fecha_publicacion).toLocaleDateString("es-CO")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {/* Modal detalle */}
       {detalle && (
-        <ModalDetalle oferta={detalle} onAccion={accionRapida} onCerrar={() => setDetalle(null)} />
+        <ModalDetalle
+          oferta={detalle}
+          onAccion={ejecutarAccion}
+          onCerrar={() => setDetalle(null)}
+        />
       )}
 
-      {/* Toast notificación */}
+      {/* Toast */}
       {toast && (
         <div className={`fixed bottom-6 right-6 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold z-50 text-white ${
-          toast.accion === "aprobada" ? "bg-green-600" : toast.accion === "pausada" ? "bg-blue-600" : "bg-red-500"
+          toast.estado === "activa"    ? "bg-green-600"
+          : toast.estado === "pausada" ? "bg-blue-600"
+          :                              "bg-red-500"
         }`}>
-          {ICONO_ACCION[toast.accion]} "{toast.cargo}" fue {toast.accion}
+          {ICONO_ACCION[toast.estado]} "{toast.titulo}" fue {LABEL_ACCION[toast.estado]}
         </div>
       )}
     </div>

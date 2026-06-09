@@ -162,7 +162,7 @@ export default function RegistroEmpresa() {
                 autoComplete="organization"
                 value={form.nombre}
                 onChange={cambiar}
-                placeholder="Ej: Clínica San Rafael"
+                placeholder="Ej: MiEmpresa S.A.S."
                 className={`w-full border rounded-xl px-4 py-3 text-sm outline-none transition-colors focus:border-azul-claro ${errores.nombre ? "border-red-400 bg-red-50" : "border-gray-200"}`}
               />
               {errores.nombre && <p className="text-red-500 text-xs mt-1">{errores.nombre}</p>}

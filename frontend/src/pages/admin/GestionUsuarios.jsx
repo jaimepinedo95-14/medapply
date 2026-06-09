@@ -12,27 +12,264 @@ const ROLES_DISPONIBLES = [
 
 function BadgeRol({ rol }) {
   const def = ROLES_DISPONIBLES.find((r) => r.valor === rol) || { etiqueta: rol, color: "bg-gray-100 text-gray-500" };
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${def.color}`}>{def.etiqueta}</span>;
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${def.color}`}>
+      {def.etiqueta}
+    </span>
+  );
 }
 
+// ── Modal de perfil de candidato ─────────────────────────────────────────────
+function ModalPerfilCandidato({ usuario, onCerrar }) {
+  const [perfil, setPerfil]   = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [cvUrl, setCvUrl]     = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
+
+  useEffect(() => {
+    supabase
+      .from("perfiles_candidato")
+      .select("*")
+      .eq("usuario_id", usuario.id)
+      .single()
+      .then(async ({ data }) => {
+        setPerfil(data || null);
+
+        // Generar URLs firmadas para CV y video
+        if (data?.hoja_de_vida_url) {
+          const { data: signed } = await supabase.storage
+            .from("cvs")
+            .createSignedUrl(data.hoja_de_vida_url, 3600);
+          if (signed?.signedUrl) setCvUrl(signed.signedUrl);
+        }
+        if (data?.video_presentacion_url) {
+          const { data: signed } = await supabase.storage
+            .from("videos")
+            .createSignedUrl(data.video_presentacion_url, 3600);
+          if (signed?.signedUrl) setVideoUrl(signed.signedUrl);
+        }
+        setCargando(false);
+      })
+      .catch(() => setCargando(false));
+  }, [usuario.id]);
+
+  const exps = Array.isArray(perfil?.experiencias) ? perfil.experiencias : [];
+  const edus = Array.isArray(perfil?.educaciones)  ? perfil.educaciones  : [];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="p-5 border-b border-gray-100 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            {perfil?.foto ? (
+              <img src={perfil.foto} alt="Foto" className="w-12 h-12 rounded-full object-cover border border-gray-200" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-2xl">👤</div>
+            )}
+            <div>
+              <h3 className="font-bold text-azul-marino text-lg">{usuario.nombre}</h3>
+              <p className="text-gray-400 text-sm">{usuario.email}</p>
+            </div>
+          </div>
+          <button onClick={onCerrar} className="text-gray-400 hover:text-gray-600 text-2xl ml-4">×</button>
+        </div>
+
+        <div className="p-5 overflow-y-auto flex-1 space-y-5">
+          {cargando ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : !perfil ? (
+            <div className="text-center py-8 text-gray-400">
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-sm">Este candidato aún no ha completado su perfil.</p>
+            </div>
+          ) : (
+            <>
+              {/* Datos básicos */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Categoría profesional", valor: perfil.categoria_profesional },
+                  { label: "Ciudad",                valor: perfil.ciudad },
+                  { label: "Teléfono",              valor: perfil.telefono },
+                  { label: "ReTHUS / Registro",     valor: perfil.numero_tarjeta_profesional },
+                  { label: "Perfil completado",      valor: perfil.porcentaje_perfil ? `${perfil.porcentaje_perfil}%` : null },
+                ].filter((f) => f.valor).map((f) => (
+                  <div key={f.label} className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400">{f.label}</p>
+                    <p className="font-semibold text-azul-marino text-sm mt-0.5">{f.valor}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Experiencia laboral */}
+              {exps.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">
+                    Experiencia laboral
+                  </p>
+                  <div className="space-y-2">
+                    {exps.map((exp, i) => (
+                      <div key={i} className="bg-gray-50 rounded-xl p-3">
+                        <p className="font-semibold text-azul-marino text-sm">{exp.cargo}</p>
+                        <p className="text-gray-500 text-xs">{exp.empresa}{exp.ciudadExp ? ` · ${exp.ciudadExp}` : ""}</p>
+                        <p className="text-gray-400 text-xs">{exp.inicio} — {exp.esActual ? "Presente" : (exp.fin || "—")}</p>
+                        {exp.descripcion && <p className="text-gray-500 text-xs mt-1">{exp.descripcion}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Educación */}
+              {edus.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-azul-marino uppercase tracking-wide mb-2">Educación</p>
+                  <div className="space-y-2">
+                    {edus.map((edu, i) => (
+                      <div key={i} className="bg-gray-50 rounded-xl p-3">
+                        <p className="font-semibold text-azul-marino text-sm">{edu.titulo}</p>
+                        <p className="text-gray-500 text-xs">{edu.institucion}{edu.año ? ` · ${edu.año}` : ""}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Archivos */}
+              <div className="flex flex-wrap gap-3">
+                {cvUrl ? (
+                  <a
+                    href={cvUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-esmeralda text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    📄 Descargar hoja de vida
+                  </a>
+                ) : perfil.hoja_de_vida_url ? (
+                  <span className="flex items-center gap-2 bg-gray-100 text-gray-500 text-sm px-4 py-2.5 rounded-xl">
+                    📄 HV cargada (sin acceso)
+                  </span>
+                ) : null}
+
+                {videoUrl ? (
+                  <a
+                    href={videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-azul-marino text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    🎥 Ver video de presentación
+                  </a>
+                ) : perfil.video_presentacion_url ? (
+                  <span className="flex items-center gap-2 bg-gray-100 text-gray-500 text-sm px-4 py-2.5 rounded-xl">
+                    🎥 Video cargado (sin acceso)
+                  </span>
+                ) : null}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal de perfil de empresa ────────────────────────────────────────────────
+function ModalPerfilEmpresa({ usuario, onCerrar }) {
+  const [perfil, setPerfil]   = useState(null);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("perfiles_empresa")
+      .select("*")
+      .eq("usuario_id", usuario.id)
+      .single()
+      .then(({ data }) => { setPerfil(data || null); setCargando(false); })
+      .catch(() => setCargando(false));
+  }, [usuario.id]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] flex flex-col">
+        <div className="p-5 border-b border-gray-100 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            {perfil?.logo ? (
+              <img src={perfil.logo} alt="Logo" className="w-12 h-12 rounded-xl object-cover border border-gray-200" />
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">🏥</div>
+            )}
+            <div>
+              <h3 className="font-bold text-azul-marino text-lg">{usuario.nombre}</h3>
+              <p className="text-gray-400 text-sm">{usuario.email}</p>
+            </div>
+          </div>
+          <button onClick={onCerrar} className="text-gray-400 hover:text-gray-600 text-2xl ml-4">×</button>
+        </div>
+
+        <div className="p-5 overflow-y-auto flex-1 space-y-4">
+          {cargando ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />)}
+            </div>
+          ) : !perfil ? (
+            <div className="text-center py-8 text-gray-400">
+              <p className="text-3xl mb-2">🏥</p>
+              <p className="text-sm">Esta empresa aún no ha completado su perfil.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Nombre empresa", valor: perfil.nombre_empresa },
+                { label: "NIT",            valor: perfil.nit },
+                { label: "Tipo",           valor: perfil.tipo_empresa },
+                { label: "Ciudad",         valor: perfil.ciudad },
+                { label: "Teléfono",       valor: perfil.telefono },
+                { label: "Sitio web",      valor: perfil.sitio_web },
+                { label: "Plan",           valor: perfil.plan },
+              ].filter((f) => f.valor).map((f) => (
+                <div key={f.label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400">{f.label}</p>
+                  <p className="font-semibold text-azul-marino text-sm mt-0.5 capitalize">{f.valor}</p>
+                </div>
+              ))}
+              {perfil.descripcion && (
+                <div className="col-span-2 bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Descripción</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{perfil.descripcion}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function GestionUsuarios() {
   const { tienePermiso, cambiarRolUsuario } = useAuth();
   const puedeGestionarRoles = tienePermiso("gestionar_roles");
 
-  const [usuarios, setUsuarios]     = useState([]);
-  const [cargando, setCargando]     = useState(true);
-  const [error, setError]           = useState(null);
-  const [busqueda, setBusqueda]     = useState("");
-  const [filtroRol, setFiltroRol]   = useState("todos");
+  const [usuarios, setUsuarios]       = useState([]);
+  const [cargando, setCargando]       = useState(true);
+  const [error, setError]             = useState(null);
+  const [busqueda, setBusqueda]       = useState("");
+  const [filtroRol, setFiltroRol]     = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
-  const [modalRol, setModalRol]     = useState(null);
+  const [modalRol, setModalRol]       = useState(null);
   const [rolSeleccionado, setRolSeleccionado] = useState("");
-  const [toast, setToast]           = useState("");
-  const [guardando, setGuardando]   = useState(false);
+  const [toast, setToast]             = useState("");
+  const [guardando, setGuardando]     = useState(false);
+  const [modalPerfil, setModalPerfil] = useState(null);
 
-  useEffect(() => {
-    cargar();
-  }, []);
+  useEffect(() => { cargar(); }, []);
 
   async function cargar() {
     setCargando(true);
@@ -70,7 +307,7 @@ export default function GestionUsuarios() {
       await cambiarRolUsuario(modalRol.id, rolSeleccionado);
       setUsuarios((p) => p.map((u) => u.id === modalRol.id ? { ...u, rol: rolSeleccionado } : u));
       mostrarToast("✅ Rol actualizado correctamente");
-    } catch (e) {
+    } catch (_) {
       mostrarToast("❌ Error al cambiar rol");
     } finally {
       setGuardando(false);
@@ -102,20 +339,24 @@ export default function GestionUsuarios() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-            {usuarios.filter(u => u.activo).length} activos
+            {usuarios.filter((u) => u.activo).length} activos
           </span>
           <span className="bg-red-100 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-full">
-            {usuarios.filter(u => !u.activo).length} inactivos
+            {usuarios.filter((u) => !u.activo).length} inactivos
           </span>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+        <input
+          type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
           placeholder="Buscar por nombre o email..."
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-esmeralda" />
-        <select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}
-          className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-esmeralda bg-white">
+          className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-esmeralda"
+        />
+        <select
+          value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}
+          className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-esmeralda bg-white"
+        >
           <option value="todos">Todos los roles</option>
           {ROLES_DISPONIBLES.map((r) => (
             <option key={r.valor} value={r.valor}>{r.etiqueta}</option>
@@ -123,10 +364,15 @@ export default function GestionUsuarios() {
         </select>
         <div className="flex gap-2">
           {["todos", "activos", "inactivos"].map((f) => (
-            <button key={f} onClick={() => setFiltroEstado(f)}
+            <button
+              key={f} onClick={() => setFiltroEstado(f)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold capitalize transition-colors ${
-                filtroEstado === f ? "bg-azul-marino text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-azul-marino"
-              }`}>{f}
+                filtroEstado === f
+                  ? "bg-azul-marino text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:border-azul-marino"
+              }`}
+            >
+              {f}
             </button>
           ))}
         </div>
@@ -168,29 +414,50 @@ export default function GestionUsuarios() {
                 {lista.map((u) => (
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3">
-                      <p className="font-semibold text-azul-marino">{u.nombre}</p>
-                      <p className="text-gray-400 text-xs">{u.email}</p>
+                      <button
+                        onClick={() => ["candidato", "empresa"].includes(u.rol) ? setModalPerfil(u) : null}
+                        className={`text-left ${["candidato", "empresa"].includes(u.rol) ? "hover:underline cursor-pointer" : "cursor-default"}`}
+                      >
+                        <p className="font-semibold text-azul-marino">{u.nombre}</p>
+                        <p className="text-gray-400 text-xs">{u.email}</p>
+                      </button>
                     </td>
                     <td className="px-5 py-3 text-center"><BadgeRol rol={u.rol} /></td>
                     <td className="px-5 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                         u.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-                      }`}>{u.activo ? "Activo" : "Inactivo"}</span>
+                      }`}>
+                        {u.activo ? "Activo" : "Inactivo"}
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-right text-gray-400 text-xs hidden md:table-cell">
                       {u.created_at ? new Date(u.created_at).toLocaleDateString("es-CO") : "—"}
                     </td>
                     <td className="px-5 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => toggleActivo(u)}
+                        {["candidato", "empresa"].includes(u.rol) && (
+                          <button
+                            onClick={() => setModalPerfil(u)}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                          >
+                            Ver perfil
+                          </button>
+                        )}
+                        <button
+                          onClick={() => toggleActivo(u)}
                           className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                            u.activo ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-700 hover:bg-green-100"
-                          }`}>
+                            u.activo
+                              ? "bg-red-50 text-red-600 hover:bg-red-100"
+                              : "bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}
+                        >
                           {u.activo ? "Bloquear" : "Activar"}
                         </button>
                         {puedeGestionarRoles && (
-                          <button onClick={() => { setModalRol(u); setRolSeleccionado(u.rol); }}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors">
+                          <button
+                            onClick={() => { setModalRol(u); setRolSeleccionado(u.rol); }}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
+                          >
                             Rol
                           </button>
                         )}
@@ -214,27 +481,47 @@ export default function GestionUsuarios() {
             </div>
             <div className="p-6 space-y-3">
               {ROLES_DISPONIBLES.map((r) => (
-                <label key={r.valor} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
-                  rolSeleccionado === r.valor ? "border-azul-marino bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                }`}>
-                  <input type="radio" name="rol" value={r.valor} checked={rolSeleccionado === r.valor}
-                    onChange={() => setRolSeleccionado(r.valor)} className="accent-azul-marino" />
+                <label
+                  key={r.valor}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                    rolSeleccionado === r.valor ? "border-azul-marino bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio" name="rol" value={r.valor}
+                    checked={rolSeleccionado === r.valor}
+                    onChange={() => setRolSeleccionado(r.valor)}
+                    className="accent-azul-marino"
+                  />
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.color}`}>{r.etiqueta}</span>
                 </label>
               ))}
               <div className="flex gap-3 mt-5">
-                <button onClick={aplicarCambioRol} disabled={rolSeleccionado === modalRol.rol || guardando}
-                  className="flex-1 bg-azul-marino text-white font-semibold py-3 rounded-xl hover:bg-azul-claro transition-colors disabled:opacity-40">
+                <button
+                  onClick={aplicarCambioRol}
+                  disabled={rolSeleccionado === modalRol.rol || guardando}
+                  className="flex-1 bg-azul-marino text-white font-semibold py-3 rounded-xl hover:bg-azul-claro transition-colors disabled:opacity-40"
+                >
                   {guardando ? "Guardando..." : "Aplicar cambio"}
                 </button>
-                <button onClick={() => setModalRol(null)}
-                  className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50">
+                <button
+                  onClick={() => setModalRol(null)}
+                  className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50"
+                >
                   Cancelar
                 </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de perfil */}
+      {modalPerfil && modalPerfil.rol === "candidato" && (
+        <ModalPerfilCandidato usuario={modalPerfil} onCerrar={() => setModalPerfil(null)} />
+      )}
+      {modalPerfil && modalPerfil.rol === "empresa" && (
+        <ModalPerfilEmpresa usuario={modalPerfil} onCerrar={() => setModalPerfil(null)} />
       )}
 
       {toast && (

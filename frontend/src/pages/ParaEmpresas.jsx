@@ -22,20 +22,20 @@ const TESTIMONIOS = [
   {
     texto: "Publicamos una oferta para Enfermera Jefe UCI y recibimos 12 postulaciones en las primeras 24 horas. La calidad de los perfiles era muy superior a otras plataformas genéricas.",
     autor: "Director de Talento Humano",
-    empresa: "Clínica Las Américas, Medellín",
-    avatar: "CLA",
+    empresa: "Clínica privada, Medellín",
+    avatar: "CL",
   },
   {
     texto: "El banco de candidatos de MedApply nos ahorra semanas de búsqueda. Podemos filtrar por categoría y ciudad y contactar directamente a los profesionales que buscamos.",
     autor: "Coordinadora de RRHH",
-    empresa: "Hospital Universitario San Ignacio, Bogotá",
-    avatar: "HUS",
+    empresa: "Hospital universitario, Bogotá",
+    avatar: "HU",
   },
   {
     texto: "Como EPS necesitamos contratar constantemente. El plan Premium nos permite publicar ofertas ilimitadas y buscar proactivamente. El ROI frente a otras plataformas es mucho mejor.",
     autor: "Gerente de Gestión Humana",
-    empresa: "Coomeva EPS, Cali",
-    avatar: "CEP",
+    empresa: "EPS nacional, Cali",
+    avatar: "EP",
   },
 ];
 
