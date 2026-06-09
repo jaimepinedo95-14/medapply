@@ -395,7 +395,8 @@ export default function PerfilCandidato() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto pb-44">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full pb-4">
 
       {/* ── Hero de progreso ── */}
       <div className="bg-gradient-to-br from-azul-marino via-azul-claro to-azul-marino text-white rounded-3xl p-6 mb-6 flex flex-col sm:flex-row items-center gap-6">
@@ -825,9 +826,10 @@ export default function PerfilCandidato() {
           </div>
         </TarjetaSeccion>
       </div>
+      </div>{/* fin contenido desplazable */}
 
-      {/* ── Botón guardar fijo ── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 px-4 py-3 z-30">
+      {/* ── Botón guardar ── */}
+      <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-gray-100 px-4 py-3 z-30">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <div className="flex-1">
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
