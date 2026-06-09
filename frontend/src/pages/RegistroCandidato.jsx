@@ -83,7 +83,7 @@ export default function RegistroCandidato() {
           Encuentra tu próximo empleo en salud
         </h2>
         <p className="text-blue-200 mb-8">
-          Más de 1.200 profesionales ya confían en MedApply para avanzar en su carrera.
+          Miles de profesionales ya confían en MedApply para avanzar en su carrera.
         </p>
 
         <ul className="space-y-4 mb-10">

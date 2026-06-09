@@ -63,7 +63,7 @@ const PREGUNTAS_EMPRESAS = [
   },
   {
     q: "¿Qué es el banco de candidatos y cómo accedo?",
-    a: "El banco de candidatos es una base de datos de más de 1.200 profesionales del sector salud que han creado perfil en MedApply. Puedes filtrar por categoría profesional, ciudad y disponibilidad, y ver el perfil completo de cada candidato. Esta función está disponible exclusivamente para empresas con plan Premium.",
+    a: "El banco de candidatos es una base de datos de profesionales del sector salud que han creado perfil en MedApply. Puedes filtrar por categoría profesional, ciudad y disponibilidad, y ver el perfil completo de cada candidato. Esta función está disponible exclusivamente para empresas con plan Premium.",
   },
   {
     q: "¿Cómo contacto directamente a un candidato?",

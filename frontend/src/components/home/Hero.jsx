@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { REGION } from "../../config/region";
-import { supabase } from "../../lib/supabase";
+import { useStats } from "../../hooks/useStats";
 
-// Íconos de búsqueda y ubicación
 const IconoBuscar = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -20,26 +19,11 @@ const IconoUbicacion = () => (
 export default function Hero() {
   const [busqueda, setBusqueda] = useState("");
   const [ciudad, setCiudad] = useState("");
-  const [stats, setStats] = useState({ ofertas: 0, empresas: 0, candidatos: 0 });
   const navigate = useNavigate();
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from("ofertas").select("*", { count: "exact", head: true }).eq("estado", "activa"),
-      supabase.from("perfiles_empresa").select("*", { count: "exact", head: true }),
-      supabase.from("perfiles_candidato").select("*", { count: "exact", head: true }),
-    ]).then(([{ count: ofertas }, { count: empresas }, { count: candidatos }]) => {
-      setStats({
-        ofertas:    ofertas    ?? 0,
-        empresas:   empresas   ?? 0,
-        candidatos: candidatos ?? 0,
-      });
-    });
-  }, []);
+  const stats = useStats();
 
   const manejarBusqueda = (e) => {
     e.preventDefault();
-    // Construye los parámetros de búsqueda y navega a la página de empleos
     const params = new URLSearchParams();
     if (busqueda) params.set("q", busqueda);
     if (ciudad) params.set("ciudad", ciudad);
@@ -80,7 +64,6 @@ export default function Hero() {
         <form onSubmit={manejarBusqueda} className="max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-2 flex flex-col md:flex-row gap-2">
 
-            {/* Campo de búsqueda por cargo */}
             <div className="flex-1 flex items-center bg-gray-50 rounded-xl px-4 py-3">
               <span className="text-gray-400 mr-3 flex-shrink-0">
                 <IconoBuscar />
@@ -94,10 +77,8 @@ export default function Hero() {
               />
             </div>
 
-            {/* Separador vertical — solo escritorio */}
             <div className="hidden md:block w-px bg-gray-200 my-2" />
 
-            {/* Selector de ciudad */}
             <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 min-w-[180px]">
               <span className="text-gray-400 mr-3 flex-shrink-0">
                 <IconoUbicacion />
@@ -114,7 +95,6 @@ export default function Hero() {
               </select>
             </div>
 
-            {/* Botón buscar */}
             <button
               type="submit"
               className="btn-primario whitespace-nowrap px-8 py-3 text-sm"
@@ -124,7 +104,7 @@ export default function Hero() {
           </div>
         </form>
 
-        {/* Estadísticas rápidas */}
+        {/* Estadísticas rápidas — datos reales con realtime */}
         <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-8 md:gap-14 border-t border-white/10 pt-8">
           {[
             { numero: stats.ofertas,    texto: "Ofertas activas" },

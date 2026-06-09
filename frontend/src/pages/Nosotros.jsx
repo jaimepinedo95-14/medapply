@@ -1,5 +1,6 @@
 // Página "Acerca de MedApply" con misión, valores y formulario de contacto
 import { useState } from "react";
+import { useStats } from "../hooks/useStats";
 
 const VALORES = [
   {
@@ -42,6 +43,7 @@ const EQUIPO = [
 ];
 
 export default function Nosotros() {
+  const stats = useStats();
   const [form, setForm] = useState({ nombre: "", email: "", mensaje: "" });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
@@ -111,10 +113,10 @@ export default function Nosotros() {
             {/* Estadísticas */}
             <div className="grid grid-cols-2 gap-4">
               {[
-                { numero: "1.200+", label: "Candidatos registrados", icono: "👩‍⚕️" },
-                { numero: "87",     label: "Empresas en la plataforma", icono: "🏥" },
-                { numero: "312",    label: "Ofertas publicadas", icono: "📋" },
-                { numero: "15",     label: "Ciudades de Colombia", icono: "🌎" },
+                { numero: stats.candidatos.toLocaleString("es-CO"), label: "Candidatos registrados", icono: "👩‍⚕️" },
+                { numero: stats.empresas.toLocaleString("es-CO"),   label: "Empresas en la plataforma", icono: "🏥" },
+                { numero: stats.ofertas.toLocaleString("es-CO"),    label: "Ofertas activas", icono: "📋" },
+                { numero: "15",                                      label: "Ciudades de Colombia", icono: "🌎" },
               ].map((s) => (
                 <div key={s.label} className="bg-gray-50 rounded-2xl p-5 text-center border border-gray-100">
                   <div className="text-2xl mb-2">{s.icono}</div>

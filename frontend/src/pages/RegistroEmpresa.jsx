@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { REGION } from "../config/region";
+import { useStats } from "../hooks/useStats";
 
 const BENEFICIOS = [
   { icono: "👥", texto: "Banco de candidatos especializados en el sector salud" },
@@ -15,6 +16,7 @@ const BENEFICIOS = [
 export default function RegistroEmpresa() {
   const navigate = useNavigate();
   const { registrarEmpresa } = useAuth();
+  const stats = useStats();
 
   const [form, setForm]             = useState({ nombre: "", email: "", password: "" });
   const [verPwd, setVerPwd]         = useState(false);
@@ -80,7 +82,7 @@ export default function RegistroEmpresa() {
           Contrata el mejor talento del sector salud
         </h2>
         <p className="text-blue-200 mb-8">
-          Únete a 87 instituciones de salud que ya usan MedApply para encontrar a sus profesionales.
+          Únete a las instituciones de salud que ya usan MedApply para encontrar a sus profesionales.
         </p>
 
         <ul className="space-y-4 mb-10">
@@ -94,9 +96,9 @@ export default function RegistroEmpresa() {
 
         <div className="grid grid-cols-3 gap-3">
           {[
-            { num: "1.200+", label: "Candidatos activos" },
-            { num: "312",    label: "Ofertas publicadas" },
-            { num: "87",     label: "Empresas" },
+            { num: stats.candidatos.toLocaleString("es-CO"), label: "Candidatos activos" },
+            { num: stats.ofertas.toLocaleString("es-CO"),    label: "Ofertas publicadas" },
+            { num: stats.empresas.toLocaleString("es-CO"),   label: "Empresas" },
           ].map((s) => (
             <div key={s.label} className="bg-white/10 rounded-xl p-3 text-center">
               <p className="text-xl font-bold">{s.num}</p>

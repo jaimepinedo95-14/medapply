@@ -1,12 +1,13 @@
 // Landing page de ventas para empresas — /para-empresas
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useStats } from "../hooks/useStats";
 
 const BENEFICIOS = [
   { icono: "🎯", titulo: "Solo sector salud",      desc: "Sin perfiles irrelevantes. Todos los candidatos son del sector salud: médicos, enfermeros, técnicos, administrativos y más." },
   { icono: "⚡", titulo: "Publicación instantánea", desc: "Publica una oferta en menos de 5 minutos y empieza a recibir postulaciones el mismo día." },
   { icono: "🔍", titulo: "Filtros especializados",  desc: "Busca por categoría profesional, ciudad, disponibilidad y nivel de experiencia. Sin ruido." },
-  { icono: "👥", titulo: "Banco de candidatos",     desc: "Con plan Premium, accede directamente a más de 1.200 perfiles activos y contacta candidatos proactivamente." },
+  { icono: "👥", titulo: "Banco de candidatos",     desc: "Con plan Premium, accede directamente al banco de perfiles activos y contacta candidatos proactivamente." },
   { icono: "✅", titulo: "Candidatos verificados",  desc: "Los perfiles con badge ReTHUS tienen su número de tarjeta profesional verificado con el Ministerio de Salud." },
   { icono: "📊", titulo: "Panel de gestión",        desc: "Gestiona todas tus ofertas, postulaciones y candidatos desde un panel intuitivo y organizado." },
 ];
@@ -72,6 +73,7 @@ const PLANES = [
 ];
 
 export default function ParaEmpresas() {
+  const stats = useStats();
   const [form, setForm] = useState({ nombre: "", cargo: "", empresa: "", email: "", telefono: "", mensaje: "" });
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
@@ -105,7 +107,7 @@ export default function ParaEmpresas() {
               en Colombia
             </h1>
             <p className="text-blue-200 text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-              Conecta con más de 1.200 profesionales de la salud verificados: médicos, enfermeros, bacteriólogos,
+              Conecta con profesionales de la salud verificados: médicos, enfermeros, bacteriólogos,
               fisioterapeutas y más. Sin perfiles irrelevantes, sin pérdida de tiempo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -121,9 +123,9 @@ export default function ParaEmpresas() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto mt-8">
             {[
-              { num: "1.200+", label: "Candidatos activos" },
-              { num: "87",     label: "Empresas confían en nosotros" },
-              { num: "312",    label: "Ofertas publicadas" },
+              { num: stats.candidatos.toLocaleString("es-CO"), label: "Candidatos activos" },
+              { num: stats.empresas.toLocaleString("es-CO"),   label: "Empresas confían en nosotros" },
+              { num: stats.ofertas.toLocaleString("es-CO"),    label: "Ofertas publicadas" },
             ].map((s) => (
               <div key={s.label} className="bg-white/10 rounded-2xl p-4 text-center">
                 <p className="text-2xl font-black">{s.num}</p>
