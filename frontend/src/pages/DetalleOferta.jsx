@@ -42,6 +42,17 @@ export default function DetalleOferta() {
       .single()
       .then(({ data }) => {
         setOferta(data || null);
+        // Registrar visita (fire & forget, una sola vez por sesión)
+        if (data?.id) {
+          const key = `visita_${data.id}`;
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, "1");
+            supabase.from("visitas_ofertas").insert({
+              oferta_id:  data.id,
+              usuario_id: usuario?.id || null,
+            }).then(() => {});
+          }
+        }
         // Cargar relacionadas por categoría
         if (data?.categoria_profesional) {
           supabase
