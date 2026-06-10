@@ -15,30 +15,69 @@ export default function NuevaPassword() {
   const [cargando, setCargando]           = useState(false);
 
   useEffect(() => {
-    // Supabase v2 procesa automáticamente el hash de la URL al inicializar.
-    // onAuthStateChange dispara PASSWORD_RECOVERY cuando detecta type=recovery en el hash.
+    let cancelado = false;
+
+    // Suscribir PRIMERO para no perder el evento PASSWORD_RECOVERY.
+    // Supabase v2 procesa el hash de la URL de forma asíncrona y dispara
+    // PASSWORD_RECOVERY a todos los suscriptores activos.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (cancelado) return;
       if (event === "PASSWORD_RECOVERY") {
         setFase("formulario");
       }
     });
 
-    // Fallback: si el SDK ya procesó el token antes de que suscribiéramos el listener,
-    // getSession() devolverá la sesión de recuperación activa.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const hash   = window.location.hash;
-      const tieneTokenEnHash = hash.includes("access_token=") && hash.includes("type=recovery");
+    (async () => {
+      const search    = new URLSearchParams(window.location.search);
+      const tokenHash = search.get("token_hash");
+      const queryType = search.get("type");
+      const code      = search.get("code");
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+      const hashToken  = hashParams.get("access_token");
+      const hashType   = hashParams.get("type");
 
-      if (tieneTokenEnHash || (session && fase === "verificando")) {
-        setFase("formulario");
-      } else if (fase === "verificando") {
-        // No hay token ni sesión de recuperación → enlace inválido o ya usado
-        setFase("invalido");
+      // ── Formato 1: ?token_hash=...&type=recovery (PKCE – email link moderno) ──
+      if (tokenHash && queryType === "recovery") {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: "recovery",
+        });
+        if (!cancelado) setFase(error ? "invalido" : "formulario");
+        return;
       }
-    });
 
-    return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      // ── Formato 2: ?code=... (PKCE code exchange) ─────────────────────────────
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!cancelado) setFase(error ? "invalido" : "formulario");
+        return;
+      }
+
+      // ── Formato 3: #access_token=...&type=recovery (implicit / legacy) ────────
+      // Supabase detecta el hash automáticamente y dispara PASSWORD_RECOVERY
+      // via onAuthStateChange (suscrito arriba). Como fallback, esperamos a que
+      // la sesión quede establecida y la verificamos.
+      if (hashToken && hashType === "recovery") {
+        // Dar tiempo al SDK para procesar el hash de forma asíncrona
+        await new Promise((r) => setTimeout(r, 1000));
+        if (cancelado) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!cancelado) {
+          // Si PASSWORD_RECOVERY ya disparó, fase ya es "formulario" — el setter no cambia nada
+          setFase((prev) => prev === "verificando" ? (session ? "formulario" : "invalido") : prev);
+        }
+        return;
+      }
+
+      // ── Sin token en URL ───────────────────────────────────────────────────────
+      if (!cancelado) setFase("invalido");
+    })();
+
+    return () => {
+      cancelado = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const cambiar = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
