@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 import { SkeletonListaOfertas } from "../components/common/SkeletonLoader";
 import { CATEGORIAS_FILTRO, CIUDADES_FILTRO, TIPOS_CONTRATO_FILTRO } from "../data/ofertasDemo";
 
@@ -88,6 +89,7 @@ function TarjetaOferta({ oferta }) {
 
 export default function Empleos() {
   const [searchParams] = useSearchParams();
+  const { usuario } = useAuth();
 
   const [categorias, setCategorias]     = useState(searchParams.get("categoria") ? [searchParams.get("categoria")] : []);
   const [ciudades, setCiudades]         = useState(searchParams.get("ciudad") ? [searchParams.get("ciudad")] : []);
@@ -98,6 +100,12 @@ export default function Empleos() {
   const [ofertas, setOfertas]           = useState([]);
   const [cargando, setCargando]         = useState(true);
   const [error, setError]               = useState(null);
+
+  // Alerta rápida desde filtros activos
+  const [modalAlerta, setModalAlerta]   = useState(false);
+  const [frecuenciaAlerta, setFrecuenciaAlerta] = useState("semanal");
+  const [guardandoAlerta, setGuardandoAlerta] = useState(false);
+  const [alertaGuardada, setAlertaGuardada]   = useState(false);
 
   const cargarOfertas = useCallback(async () => {
     setCargando(true);
@@ -137,6 +145,22 @@ export default function Empleos() {
 
   const hayFiltros = categorias.length || ciudades.length || tiposContrato.length || busqueda;
 
+  async function guardarAlertaDesdeFiltos() {
+    if (!usuario?.id) return;
+    setGuardandoAlerta(true);
+    await supabase.from("alertas_empleo").insert({
+      candidato_id:  usuario.id,
+      categoria:     categorias[0] || null,
+      ciudad:        ciudades[0]   || null,
+      tipo_contrato: tiposContrato[0] || null,
+      frecuencia:    frecuenciaAlerta,
+    });
+    setGuardandoAlerta(false);
+    setModalAlerta(false);
+    setAlertaGuardada(true);
+    setTimeout(() => setAlertaGuardada(false), 4000);
+  }
+
   const panelFiltros = (
     <aside className="w-full">
       <div className="flex justify-between items-center mb-4">
@@ -160,6 +184,54 @@ export default function Empleos() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+
+      {/* Modal crear alerta */}
+      {modalAlerta && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-azul-marino mb-1">Crear alerta de empleo</h2>
+            <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+              Te avisaremos por email cuando aparezcan nuevas ofertas con los filtros que tienes activos:
+              <span className="block mt-1 font-semibold text-azul-marino">
+                {[...categorias, ...ciudades, ...tiposContrato].join(" · ") || "Todas las ofertas"}
+              </span>
+            </p>
+            <div className="mb-5">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Frecuencia del email</p>
+              <div className="flex gap-3">
+                {[
+                  { value: "diaria",  label: "Diaria",  desc: "Cada día" },
+                  { value: "semanal", label: "Semanal", desc: "Cada lunes" },
+                ].map((f) => (
+                  <label key={f.value}
+                    className={`flex-1 flex items-center gap-2 border rounded-xl px-3 py-2.5 cursor-pointer transition-colors text-sm ${
+                      frecuenciaAlerta === f.value
+                        ? "border-azul-marino bg-azul-marino/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}>
+                    <input type="radio" value={f.value} checked={frecuenciaAlerta === f.value}
+                      onChange={() => setFrecuenciaAlerta(f.value)} className="accent-azul-marino" />
+                    <div>
+                      <p className="font-semibold text-azul-marino">{f.label}</p>
+                      <p className="text-xs text-gray-400">{f.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setModalAlerta(false)}
+                className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                Cancelar
+              </button>
+              <button onClick={guardarAlertaDesdeFiltos} disabled={guardandoAlerta}
+                className="flex-1 bg-esmeralda hover:bg-esmeralda-hover text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-60 text-sm">
+                {guardandoAlerta ? "Guardando..." : "🔔 Crear alerta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hero de búsqueda */}
       <div className="bg-azul-marino py-10 px-4">
         <div className="max-w-4xl mx-auto">
@@ -184,7 +256,7 @@ export default function Empleos() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Barra móvil */}
-        <div className="flex items-center justify-between mb-4 md:hidden">
+        <div className="flex items-center justify-between mb-3 md:hidden">
           <p className="text-gray-500 text-sm">
             <strong className="text-azul-marino">{ofertas.length}</strong> ofertas
           </p>
@@ -193,6 +265,18 @@ export default function Empleos() {
             ⚙ Filtros {hayFiltros ? `(${categorias.length + ciudades.length + tiposContrato.length})` : ""}
           </button>
         </div>
+        {hayFiltros && usuario?.rol === "candidato" && (
+          <div className="mb-4 md:hidden">
+            {alertaGuardada ? (
+              <p className="text-xs text-green-600 font-semibold text-center">✅ ¡Alerta creada!</p>
+            ) : (
+              <button onClick={() => setModalAlerta(true)}
+                className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-azul-marino border border-azul-marino/30 bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition-colors">
+                🔔 Crear alerta para esta búsqueda
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Modal filtros móvil */}
         {filtrosMobile && (
@@ -220,13 +304,30 @@ export default function Empleos() {
 
           {/* Listado */}
           <div className="flex-1 min-w-0">
-            <p className="text-gray-500 text-sm mb-4 hidden md:block">
-              {cargando ? (
-                <span className="inline-block h-4 w-36 bg-gray-200 animate-pulse rounded" />
-              ) : (
-                <><strong className="text-azul-marino">{ofertas.length}</strong> ofertas encontradas</>
+            <div className="flex items-center justify-between mb-4 hidden md:flex">
+              <p className="text-gray-500 text-sm">
+                {cargando ? (
+                  <span className="inline-block h-4 w-36 bg-gray-200 animate-pulse rounded" />
+                ) : (
+                  <><strong className="text-azul-marino">{ofertas.length}</strong> ofertas encontradas</>
+                )}
+              </p>
+              {/* Botón crear alerta — solo candidatos con filtros activos */}
+              {hayFiltros && usuario?.rol === "candidato" && (
+                alertaGuardada ? (
+                  <span className="text-xs text-green-600 font-semibold bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg">
+                    ✅ ¡Alerta creada!
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setModalAlerta(true)}
+                    className="flex items-center gap-2 text-xs font-semibold text-azul-marino border border-azul-marino/30 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    🔔 Crear alerta para esta búsqueda
+                  </button>
+                )
               )}
-            </p>
+            </div>
 
             {cargando ? (
               <SkeletonListaOfertas cantidad={6} />

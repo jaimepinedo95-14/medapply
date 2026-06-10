@@ -18,8 +18,9 @@ export default function RegistroCandidato() {
   const navigate = useNavigate();
   const { registrarCandidato } = useAuth();
 
-  const [form, setForm]             = useState({ nombre: "", email: "", password: "" });
+  const [form, setForm]             = useState({ nombre: "", email: "", password: "", confirmPassword: "" });
   const [verPwd, setVerPwd]         = useState(false);
+  const [verPwdConfirm, setVerPwdConfirm] = useState(false);
   const [acepta, setAcepta]         = useState(false);
   const [errores, setErrores]       = useState({});
   const [errorGeneral, setErrorGeneral] = useState("");
@@ -39,6 +40,10 @@ export default function RegistroCandidato() {
       e.email    = "Correo electrónico no válido.";
     if (!form.password || form.password.length < 6)
       e.password = "Mínimo 6 caracteres.";
+    if (!form.confirmPassword)
+      e.confirmPassword = "Confirma tu contraseña.";
+    else if (form.confirmPassword !== form.password)
+      e.confirmPassword = "Las contraseñas no coinciden.";
     if (!acepta)
       e.acepta   = "Debes aceptar la política de datos.";
     return e;
@@ -205,6 +210,37 @@ export default function RegistroCandidato() {
                 </button>
               </div>
               {errores.password && <p className="text-red-500 text-xs mt-1">{errores.password}</p>}
+            </div>
+
+            {/* Confirmar contraseña */}
+            <div>
+              <label className="block text-sm font-semibold text-azul-marino mb-1.5">
+                Confirmar contraseña
+              </label>
+              <div className="relative">
+                <input
+                  name="confirmPassword"
+                  type={verPwdConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={form.confirmPassword}
+                  onChange={cambiar}
+                  placeholder="Repite tu contraseña"
+                  className={`w-full border rounded-xl px-4 py-3 pr-12 text-sm outline-none transition-colors focus:border-azul-claro ${errores.confirmPassword ? "border-red-400 bg-red-50" : form.confirmPassword && form.confirmPassword === form.password ? "border-green-400 bg-green-50" : "border-gray-200"}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPwdConfirm(!verPwdConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+                >
+                  {verPwdConfirm ? "🙈" : "👁"}
+                </button>
+              </div>
+              {errores.confirmPassword
+                ? <p className="text-red-500 text-xs mt-1">{errores.confirmPassword}</p>
+                : form.confirmPassword && form.confirmPassword === form.password
+                  ? <p className="text-green-600 text-xs mt-1">✓ Las contraseñas coinciden</p>
+                  : null
+              }
             </div>
 
             {/* Ley 1581 — obligatorio legalmente pero no invasivo */}

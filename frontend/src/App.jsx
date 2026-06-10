@@ -37,6 +37,7 @@ import RegistroEmpresa from "./pages/RegistroEmpresa";
 import DashboardCandidato from "./pages/candidato/DashboardCandidato";
 import PerfilCandidato from "./pages/candidato/PerfilCandidato";
 import MisPostulaciones from "./pages/candidato/MisPostulaciones";
+import AlertasEmpleo from "./pages/candidato/AlertasEmpleo";
 import SuscripcionCandidato from "./pages/candidato/SuscripcionCandidato";
 import ConfiguracionCandidato from "./pages/candidato/ConfiguracionCandidato";
 
@@ -130,6 +131,7 @@ function App() {
             <Route path="dashboard"     element={<DashboardCandidato />} />
             <Route path="perfil"        element={<PerfilCandidato />} />
             <Route path="postulaciones" element={<MisPostulaciones />} />
+            <Route path="alertas"       element={<AlertasEmpleo />} />
             <Route path="suscripcion"   element={<SuscripcionCandidato />} />
             <Route path="configuracion" element={<ConfiguracionCandidato />} />
           </Route>
