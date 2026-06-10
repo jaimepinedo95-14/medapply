@@ -14,6 +14,11 @@ const CATEGORIAS = [
 
 const CIUDADES = [...REGION.ciudades, "Otra"];
 
+const CATEGORIAS_CON_RETHUS = [
+  "médico general", "médico especialista", "enfermero/a",
+  "odontólogo/a", "bacteriólogo/a", "fisioterapeuta",
+];
+
 const SECCIONES_CONFIG = [
   { key: "foto",        pts: 10, label: "Foto de perfil",       icono: "📷" },
   { key: "basicos",     pts: 20, label: "Información básica",   icono: "📋" },
@@ -26,15 +31,16 @@ const SECCIONES_CONFIG = [
 ];
 
 function calcularProgreso(p) {
+  const requiereReTHUS = CATEGORIAS_CON_RETHUS.includes(p.categoria?.toLowerCase() ?? "");
   let pts = 0;
-  if (p.fotoPreview)              pts += 10;
-  if (p.categoria && p.ciudad)    pts += 20;
-  if (p.telefono)                 pts +=  5;
-  if (p.tarjetaReTHUS)            pts += 15;
-  if (p.experiencias.length > 0)  pts += 20;
-  if (p.educaciones.length > 0)   pts += 15;
-  if (p.cvNombre)                 pts += 10;
-  if (p.videoNombre)              pts +=  5;
+  if (p.fotoPreview)                          pts += 10;
+  if (p.categoria && p.ciudad)               pts += 20;
+  if (p.telefono)                            pts +=  5;
+  if (requiereReTHUS && p.tarjetaReTHUS)     pts += 15;
+  if (p.experiencias.length > 0)             pts += 20;
+  if (p.educaciones.length > 0)              pts += 15;
+  if (p.cvNombre)                            pts += 10;
+  if (p.videoNombre)                         pts +=  5;
   return pts;
 }
 
@@ -152,8 +158,9 @@ export default function PerfilCandidato() {
   const cvFileRef    = useRef(null);
   const videoFileRef = useRef(null);
 
-  const pct    = calcularProgreso(perfil);
-  const toggle = (nombre) => setSeccion((s) => (s === nombre ? null : nombre));
+  const pct           = calcularProgreso(perfil);
+  const mostrarReTHUS = CATEGORIAS_CON_RETHUS.includes(perfil.categoria?.toLowerCase() ?? "");
+  const toggle        = (nombre) => setSeccion((s) => (s === nombre ? null : nombre));
 
   // Cargar perfil existente desde Supabase
   useEffect(() => {
@@ -410,7 +417,7 @@ export default function PerfilCandidato() {
               { label: "Experiencia", done: perfil.experiencias.length > 0 },
               { label: "Educación",   done: perfil.educaciones.length > 0 },
               { label: "HV PDF",      done: !!perfil.cvNombre },
-              { label: "ReTHUS",      done: !!perfil.tarjetaReTHUS },
+              ...(mostrarReTHUS ? [{ label: "ReTHUS", done: !!perfil.tarjetaReTHUS }] : []),
               { label: "Video",       done: !!perfil.videoNombre },
             ].map((item) => (
               <span
@@ -531,7 +538,8 @@ export default function PerfilCandidato() {
           </div>
         </TarjetaSeccion>
 
-        {/* 3. Verificación ReTHUS */}
+        {/* 3. Verificación ReTHUS — solo para profesionales regulados */}
+        {mostrarReTHUS && (
         <TarjetaSeccion
           icono="🏅" titulo={`Verificación ${REGION.registroProfesional.nombre}`} puntos={15}
           completada={!!perfil.tarjetaReTHUS}
@@ -582,6 +590,7 @@ export default function PerfilCandidato() {
             </button>
           </div>
         </TarjetaSeccion>
+        )}
 
         {/* 4. Experiencia laboral */}
         <TarjetaSeccion
