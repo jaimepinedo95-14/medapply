@@ -11,9 +11,10 @@ const COLOR_ROL = {
   superadmin: "bg-yellow-100 text-yellow-700",
 };
 const COLOR_PLAN = {
-  Premium: "bg-esmeralda text-white", Básico: "bg-blue-100 text-blue-700",
-  Gratuito: "bg-gray-100 text-gray-500", Destacado: "bg-yellow-100 text-yellow-700",
+  premium: "bg-esmeralda text-white", basico: "bg-blue-100 text-blue-700",
+  gratuito: "bg-gray-100 text-gray-500", destacado: "bg-yellow-100 text-yellow-700",
 };
+const LABEL_PLAN_ADMIN = { premium: "Premium", basico: "Básico", gratuito: "Gratuito", destacado: "Destacado" };
 const COLOR_PAGO = {
   activo: "bg-green-100 text-green-700", vencido: "bg-red-100 text-red-600", pendiente: "bg-yellow-100 text-yellow-700",
 };
@@ -38,7 +39,7 @@ export default function DashboardAdmin() {
   const esSuperAdmin = usuario?.rol === "superadmin";
 
   const [stats, setStats]                     = useState({ candidatos: 0, empresas: 0, ofertas: 0, ingresos: 0 });
-  const [planesEmpresas, setPlanesEmpresas]   = useState({ Premium: 0, Básico: 0, Gratuito: 0 });
+  const [planesEmpresas, setPlanesEmpresas]   = useState({ gratuito: 0, basico: 0, premium: 0 });
   const [usuariosRecientes, setUsuariosRecientes] = useState([]);
   const [empresasRecientes, setEmpresasRecientes] = useState([]);
   const [pagosRecientes, setPagosRecientes]   = useState([]);
@@ -74,7 +75,7 @@ export default function DashboardAdmin() {
 
         const ingresos = (suscripciones || []).reduce((s, r) => s + (r.precio || 0), 0);
 
-        const planes = { Premium: 0, Básico: 0, Gratuito: 0 };
+        const planes = { gratuito: 0, basico: 0, premium: 0 };
         (planesData || []).forEach((e) => { if (e.plan in planes) planes[e.plan]++; });
 
         setStats({ candidatos: candidatos ?? 0, empresas: empresas ?? 0, ofertas: ofertas ?? 0, ingresos });
@@ -99,7 +100,7 @@ export default function DashboardAdmin() {
       color: "bg-yellow-50 border-yellow-100", texto: "text-yellow-700", permiso: "ver_pagos" },
   ].filter((s) => !s.permiso || tienePermiso(s.permiso));
 
-  const totalEmpresas = planesEmpresas.Premium + planesEmpresas.Básico + planesEmpresas.Gratuito;
+  const totalEmpresas = planesEmpresas.premium + planesEmpresas.basico + planesEmpresas.gratuito;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
@@ -136,9 +137,9 @@ export default function DashboardAdmin() {
       {!cargando && totalEmpresas > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm max-w-md">
           <h3 className="font-bold text-azul-marino mb-4">Distribución de planes — Empresas</h3>
-          <BarraPlan label="Premium"  cantidad={planesEmpresas.Premium}  total={totalEmpresas} color="bg-esmeralda" />
-          <BarraPlan label="Básico"   cantidad={planesEmpresas.Básico}   total={totalEmpresas} color="bg-blue-400"  />
-          <BarraPlan label="Gratuito" cantidad={planesEmpresas.Gratuito} total={totalEmpresas} color="bg-gray-300"  />
+          <BarraPlan label="Premium"  cantidad={planesEmpresas.premium}  total={totalEmpresas} color="bg-esmeralda" />
+          <BarraPlan label="Básico"   cantidad={planesEmpresas.basico}   total={totalEmpresas} color="bg-blue-400"  />
+          <BarraPlan label="Gratuito" cantidad={planesEmpresas.gratuito} total={totalEmpresas} color="bg-gray-300"  />
         </div>
       )}
 
@@ -228,7 +229,7 @@ export default function DashboardAdmin() {
                     <td className="px-5 py-3 text-gray-600 hidden md:table-cell">{e.ciudad || "—"}</td>
                     <td className="px-5 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[e.plan] || "bg-gray-100 text-gray-500"}`}>
-                        {e.plan || "Gratuito"}
+                        {LABEL_PLAN_ADMIN[e.plan] || "Gratuito"}
                       </span>
                     </td>
                   </tr>
@@ -277,7 +278,7 @@ export default function DashboardAdmin() {
                       </td>
                       <td className="px-5 py-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${COLOR_PLAN[p.plan] || "bg-gray-100 text-gray-500"}`}>
-                          {p.plan}
+                          {LABEL_PLAN_ADMIN[p.plan] || p.plan}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-right font-bold text-azul-marino">
