@@ -30,6 +30,7 @@ import Mensajes from "./pages/Mensajes";
 // Autenticación
 import Login from "./pages/Login";
 import RecuperarPassword from "./pages/RecuperarPassword";
+import NuevaPassword from "./pages/NuevaPassword";
 import RegistroCandidato from "./pages/RegistroCandidato";
 import RegistroEmpresa from "./pages/RegistroEmpresa";
 
@@ -119,6 +120,7 @@ function App() {
           {/* ── Autenticación ── */}
           <Route path="/login"              element={<Login />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
+          <Route path="/nueva-password"     element={<NuevaPassword />} />
           <Route path="/registro/candidato" element={<RegistroCandidato />} />
           <Route path="/registro/empresa"   element={<RegistroEmpresa />} />
 
