@@ -7,7 +7,7 @@ export const CATEGORIAS_FILTRO = [
   "Farmacéutico/a", "Tecnólogo en radiología", "Oficios varios",
 ];
 
-export const CIUDADES_FILTRO = REGION.ciudades.slice(0, 10);
+export const CIUDADES_FILTRO = REGION.ciudades;
 
 export const TIPOS_CONTRATO_FILTRO = [
   "Tiempo completo", "Medio tiempo", "Por turnos", "Prestación de servicios", "Contrato por obra o labor",

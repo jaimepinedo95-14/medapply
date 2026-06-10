@@ -1,3 +1,5 @@
+import { MUNICIPIOS_COLOMBIA } from "./municipios";
+
 /**
  * Configuración regional de MedApply.
  *
@@ -30,11 +32,7 @@ export const REGION_CO = {
 
   leyPrivacidad: "Ley 1581 de 2012",
 
-  ciudades: [
-    "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena",
-    "Bucaramanga", "Pereira", "Manizales", "Santa Marta", "Cúcuta",
-    "Villavicencio", "Montería", "Ibagué", "Pasto",
-  ],
+  ciudades: MUNICIPIOS_COLOMBIA,
 
   telefono: {
     formato: "3XX XXX XXXX",
