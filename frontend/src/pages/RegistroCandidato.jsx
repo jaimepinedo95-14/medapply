@@ -101,10 +101,9 @@ export default function RegistroCandidato() {
         </ul>
 
         <div className="bg-white/10 rounded-2xl p-5">
-          <p className="text-sm text-blue-200 italic leading-relaxed">
-            "Encontré trabajo como enfermera jefe en Bogotá a los 3 días de registrarme. El proceso fue muy sencillo."
+          <p className="text-sm text-blue-100 leading-relaxed">
+            ¡Únete a miles de profesionales de la salud que ya encontraron su próximo empleo en MedApply!
           </p>
-          <p className="text-white font-semibold text-sm mt-2">— María S., Enfermera UCI · Bogotá</p>
         </div>
       </div>
 
