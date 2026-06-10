@@ -146,7 +146,7 @@ export function AuthProvider({ children }) {
 
   const recuperarPassword = async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/nueva-password`,
+      redirectTo: "https://medapply.co/nueva-password",
     });
     if (error) throw new Error(error.message);
   };
