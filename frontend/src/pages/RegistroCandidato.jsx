@@ -102,7 +102,7 @@ export default function RegistroCandidato() {
 
         <div className="bg-white/10 rounded-2xl p-5">
           <p className="text-sm text-blue-100 leading-relaxed">
-            ¡Únete a miles de profesionales de la salud que ya encontraron su próximo empleo en MedApply!
+            La primera bolsa de empleo exclusiva del sector salud en Colombia. Crea tu perfil gratis y conecta directamente con clínicas, hospitales y EPS.
           </p>
         </div>
       </div>
