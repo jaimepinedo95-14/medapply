@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import BotonesOAuth from "../components/auth/BotonesOAuth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -69,6 +70,15 @@ export default function Login() {
 
         {/* Formulario */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-card p-8">
+
+          {/* OAuth */}
+          <BotonesOAuth className="mb-5" />
+          <div className="flex items-center gap-3 mb-5">
+            <hr className="flex-1 border-gray-100" />
+            <span className="text-xs text-gray-400 font-medium">o continúa con email</span>
+            <hr className="flex-1 border-gray-100" />
+          </div>
+
           <form onSubmit={enviar} noValidate className="space-y-5">
 
             {/* Error general */}

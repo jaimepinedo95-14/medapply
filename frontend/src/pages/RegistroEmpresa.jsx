@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { REGION } from "../config/region";
 import { useStats } from "../hooks/useStats";
+import BotonesOAuth from "../components/auth/BotonesOAuth";
 
 const BENEFICIOS = [
   { icono: "👥", texto: "Banco de candidatos especializados en el sector salud" },
@@ -155,6 +156,14 @@ export default function RegistroEmpresa() {
                 <span className="flex-shrink-0">⚠️</span>{errorGeneral}
               </div>
             )}
+
+            {/* OAuth */}
+            <BotonesOAuth />
+            <div className="flex items-center gap-3">
+              <hr className="flex-1 border-gray-100" />
+              <span className="text-xs text-gray-400 font-medium">o regístrate con email</span>
+              <hr className="flex-1 border-gray-100" />
+            </div>
 
             {/* Nombre de empresa */}
             <div>

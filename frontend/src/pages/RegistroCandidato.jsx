@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { REGION } from "../config/region";
+import BotonesOAuth from "../components/auth/BotonesOAuth";
 
 const SUPERADMIN_EMAIL = "jaimepinedo95@gmail.com";
 
@@ -150,6 +151,14 @@ export default function RegistroCandidato() {
                 <span className="flex-shrink-0">⚠️</span>{errorGeneral}
               </div>
             )}
+
+            {/* OAuth */}
+            <BotonesOAuth />
+            <div className="flex items-center gap-3">
+              <hr className="flex-1 border-gray-100" />
+              <span className="text-xs text-gray-400 font-medium">o regístrate con email</span>
+              <hr className="flex-1 border-gray-100" />
+            </div>
 
             {/* Nombre */}
             <div>
