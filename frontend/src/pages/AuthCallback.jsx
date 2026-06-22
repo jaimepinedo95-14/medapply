@@ -8,10 +8,17 @@ import { useAuth } from "../context/AuthContext";
 // y resuelve consultando la tabla `usuarios` en Supabase (sin datos mock).
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { usuario, DESTINO_POR_ROL } = useAuth();
+  const { usuario, DESTINO_POR_ROL, elegirRolOAuth } = useAuth();
   const [fallo, setFallo] = useState(false);
+  const [guardandoRol, setGuardandoRol] = useState(false);
+  const [errorRol, setErrorRol] = useState("");
 
   useEffect(() => {
+    if (usuario && usuario.rol === "pendiente") {
+      // Usuario nuevo via OAuth sin rol elegido — se queda en esta página
+      // mostrando la pantalla de selección, no se redirige.
+      return;
+    }
     if (usuario) {
       navigate(DESTINO_POR_ROL[usuario.rol] || "/", { replace: true });
       return;
@@ -23,6 +30,54 @@ export default function AuthCallback() {
     }, 6000);
     return () => clearTimeout(timeout);
   }, [usuario, navigate, DESTINO_POR_ROL]);
+
+  const elegirRol = async (rol) => {
+    setGuardandoRol(true);
+    setErrorRol("");
+    try {
+      await elegirRolOAuth(rol);
+      navigate(DESTINO_POR_ROL[rol] || "/", { replace: true });
+    } catch (err) {
+      setErrorRol(err.message || "No se pudo guardar tu elección. Intenta de nuevo.");
+      setGuardandoRol(false);
+    }
+  };
+
+  if (usuario?.rol === "pendiente") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 max-w-md w-full text-center">
+          <h2 className="text-xl font-bold text-azul-marino mb-2">
+            ¿Cómo quieres usar MedApply?
+          </h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Elige una opción para terminar de configurar tu cuenta.
+          </p>
+
+          {errorRol && (
+            <p className="text-red-500 text-xs mb-4">⚠️ {errorRol}</p>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => elegirRol("candidato")}
+              disabled={guardandoRol}
+              className="w-full btn-primario py-3.5 text-sm disabled:opacity-60"
+            >
+              🩺 Soy profesional de salud
+            </button>
+            <button
+              onClick={() => elegirRol("empresa")}
+              disabled={guardandoRol}
+              className="w-full btn-outline py-3.5 text-sm disabled:opacity-60"
+            >
+              🏥 Soy empresa o IPS
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (fallo) {
     return (

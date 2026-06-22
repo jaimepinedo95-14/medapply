@@ -151,6 +151,32 @@ export function AuthProvider({ children }) {
     if (error) throw new Error(error.message);
   };
 
+  // Para usuarios nuevos que llegan via OAuth (Google/Apple) con rol "pendiente":
+  // guarda el rol elegido y crea el perfil correspondiente con datos reales.
+  const elegirRolOAuth = async (nuevoRol) => {
+    if (!usuario?.id) throw new Error("No hay sesión activa.");
+
+    const { error: errUsuario } = await supabase
+      .from("usuarios")
+      .update({ rol: nuevoRol })
+      .eq("id", usuario.id);
+    if (errUsuario) throw new Error(errUsuario.message);
+
+    if (nuevoRol === "candidato") {
+      const { error: errPerfil } = await supabase
+        .from("perfiles_candidato")
+        .insert({ usuario_id: usuario.id });
+      if (errPerfil && errPerfil.code !== "23505") throw new Error(errPerfil.message);
+    } else if (nuevoRol === "empresa") {
+      const { error: errPerfil } = await supabase
+        .from("perfiles_empresa")
+        .insert({ usuario_id: usuario.id, nombre_empresa: usuario.nombre || "" });
+      if (errPerfil && errPerfil.code !== "23505") throw new Error(errPerfil.message);
+    }
+
+    setUsuario((u) => ({ ...u, rol: nuevoRol }));
+  };
+
   // ── Permisos ───────────────────────────────────────────────────────────────
 
   const tienePermiso = (permiso) => {
@@ -179,6 +205,7 @@ export function AuthProvider({ children }) {
       registrarCandidato,
       registrarEmpresa,
       recuperarPassword,
+      elegirRolOAuth,
       tienePermiso,
       esRol,
       cambiarRolUsuario,

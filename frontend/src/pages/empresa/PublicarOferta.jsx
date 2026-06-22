@@ -145,17 +145,31 @@ export default function PublicarOferta() {
               <label className="block text-sm font-semibold text-azul-marino mb-1.5">
                 Salario mensual <span className="text-gray-400 font-normal text-xs">(opcional)</span>
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
-                <input
-                  name="salario"
-                  type="text"
-                  inputMode="numeric"
-                  value={datos.salario}
-                  onChange={manejarCambio}
-                  placeholder="Ej: 3.500.000 COP"
-                  className="w-full border border-gray-300 rounded-xl pl-8 pr-4 py-3 text-sm outline-none focus:border-esmeralda"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                  <input
+                    name="salarioMin"
+                    type="text"
+                    inputMode="numeric"
+                    value={datos.salarioMin}
+                    onChange={manejarCambio}
+                    placeholder="Mínimo"
+                    className="w-full border border-gray-300 rounded-xl pl-8 pr-4 py-3 text-sm outline-none focus:border-esmeralda"
+                  />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                  <input
+                    name="salarioMax"
+                    type="text"
+                    inputMode="numeric"
+                    value={datos.salarioMax}
+                    onChange={manejarCambio}
+                    placeholder="Máximo"
+                    className="w-full border border-gray-300 rounded-xl pl-8 pr-4 py-3 text-sm outline-none focus:border-esmeralda"
+                  />
+                </div>
               </div>
               <p className="text-xs text-gray-400 mt-1">Déjalo en blanco para mostrar "Salario a convenir".</p>
             </div>
