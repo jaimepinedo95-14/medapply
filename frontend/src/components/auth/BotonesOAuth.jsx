@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
-const REDIRECT_URL = "https://medapply.co";
+const REDIRECT_URL = "https://medapply.co/auth/callback";
 
 function IconoGoogle() {
   return (

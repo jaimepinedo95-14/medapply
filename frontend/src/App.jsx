@@ -31,6 +31,7 @@ import Mensajes from "./pages/Mensajes";
 import Login from "./pages/Login";
 import RecuperarPassword from "./pages/RecuperarPassword";
 import NuevaPassword from "./pages/NuevaPassword";
+import AuthCallback from "./pages/AuthCallback";
 import RegistroCandidato from "./pages/RegistroCandidato";
 import RegistroEmpresa from "./pages/RegistroEmpresa";
 
@@ -121,6 +122,7 @@ function App() {
           <Route path="/login"              element={<Login />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
           <Route path="/nueva-password"     element={<NuevaPassword />} />
+          <Route path="/auth/callback"      element={<AuthCallback />} />
           <Route path="/registro/candidato" element={<RegistroCandidato />} />
           <Route path="/registro/empresa"   element={<RegistroEmpresa />} />
 
