@@ -47,8 +47,8 @@ import ConfiguracionCandidato from "./pages/candidato/ConfiguracionCandidato";
 import DashboardEmpresa from "./pages/empresa/DashboardEmpresa";
 import PublicarOferta from "./pages/empresa/PublicarOferta";
 import MisOfertas from "./pages/empresa/MisOfertas";
-import BancoCandidatos from "./pages/empresa/BancoCandidatos";
-import SuscripcionEmpresa from "./pages/empresa/SuscripcionEmpresa";
+import Candidatos from "./pages/empresa/Candidatos";
+import MiPlan from "./pages/empresa/MiPlan";
 import ConfiguracionEmpresa from "./pages/empresa/ConfiguracionEmpresa";
 import Estadisticas from "./pages/empresa/Estadisticas";
 
@@ -149,9 +149,10 @@ function App() {
             <Route path="dashboard"       element={<DashboardEmpresa />} />
             <Route path="ofertas"         element={<MisOfertas />} />
             <Route path="publicar-oferta" element={<PublicarOferta />} />
-            <Route path="candidatos"      element={<BancoCandidatos />} />
+            <Route path="candidatos"      element={<Candidatos />} />
+            <Route path="plan"            element={<MiPlan />} />
+            <Route path="suscripcion"     element={<MiPlan />} />
             <Route path="estadisticas"    element={<Estadisticas />} />
-            <Route path="suscripcion"     element={<SuscripcionEmpresa />} />
             <Route path="configuracion"   element={<ConfiguracionEmpresa />} />
           </Route>
 

@@ -56,11 +56,11 @@ export default function MisOfertas() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-azul-marino">Mis ofertas</h1>
-          <p className="text-gray-500 text-sm mt-1">Gestiona las ofertas de empleo publicadas.</p>
+          <h1 className="text-2xl font-bold text-azul-marino">Mis vacantes</h1>
+          <p className="text-gray-500 text-sm mt-1">Gestiona las vacantes publicadas por tu empresa.</p>
         </div>
         <Link to="/empresa/publicar-oferta" className="btn-primario text-sm py-2 px-4 whitespace-nowrap">
-          + Publicar oferta
+          + Publicar nueva vacante
         </Link>
       </div>
 
@@ -96,10 +96,10 @@ export default function MisOfertas() {
       ) : ofertas.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
           <div className="text-5xl mb-4">📋</div>
-          <h3 className="font-bold text-azul-marino text-lg mb-2">Aún no has publicado ofertas</h3>
-          <p className="text-gray-400 text-sm mb-5">Publica tu primera oferta y empieza a recibir postulaciones hoy mismo.</p>
+          <h3 className="font-bold text-azul-marino text-lg mb-2">Aún no has publicado vacantes</h3>
+          <p className="text-gray-400 text-sm mb-5">Publica tu primera vacante y empieza a recibir postulaciones hoy mismo.</p>
           <Link to="/empresa/publicar-oferta" className="btn-primario text-sm py-2.5 px-6">
-            Publicar primera oferta
+            Publicar primera vacante
           </Link>
         </div>
       ) : (
@@ -134,12 +134,15 @@ export default function MisOfertas() {
                   </div>
                 </div>
                 <div className="flex gap-3 mt-4 pt-4 border-t border-gray-50">
-                  <Link to={`/empleos/${o.id}`} className="text-sm text-esmeralda font-semibold hover:underline">
-                    Ver oferta pública
+                  <Link to={`/empresa/candidatos?oferta=${o.id}`} className="btn-outline text-sm py-2 px-4">
+                    👥 Ver candidatos
+                  </Link>
+                  <Link to={`/empleos/${o.id}`} className="text-sm text-esmeralda font-semibold hover:underline self-center">
+                    Ver vacante pública
                   </Link>
                   {o.estado === "activa" && (
-                    <button onClick={() => cerrarOferta(o.id)} className="text-sm text-gray-400 hover:text-red-500 transition-colors">
-                      Cerrar oferta
+                    <button onClick={() => cerrarOferta(o.id)} className="text-sm text-gray-400 hover:text-red-500 transition-colors self-center ml-auto">
+                      Cerrar vacante
                     </button>
                   )}
                 </div>

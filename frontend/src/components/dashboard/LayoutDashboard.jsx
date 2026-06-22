@@ -31,13 +31,10 @@ const LINKS = {
     { ruta: "/candidato/configuracion",  etiqueta: "Configuración",     icono: Iconos.config },
   ],
   empresa: [
-    { ruta: "/empresa/dashboard",        etiqueta: "Inicio",             icono: Iconos.inicio },
-    { ruta: "/empresa/ofertas",          etiqueta: "Mis ofertas",        icono: Iconos.lista },
-    { ruta: "/empresa/publicar-oferta",  etiqueta: "Publicar oferta",   icono: Iconos.mas },
-    { ruta: "/empresa/candidatos",       etiqueta: "Banco de candidatos", icono: Iconos.usuarios },
-    { ruta: "/empresa/estadisticas",     etiqueta: "Estadísticas",      icono: Iconos.grafica },
-    { ruta: "/empresa/suscripcion",      etiqueta: "Mi suscripción",    icono: Iconos.estrella },
-    { ruta: "/empresa/configuracion",    etiqueta: "Configuración",     icono: Iconos.config },
+    { ruta: "/empresa/dashboard",        etiqueta: "Inicio",        icono: Iconos.inicio },
+    { ruta: "/empresa/ofertas",          etiqueta: "Mis vacantes",  icono: Iconos.lista },
+    { ruta: "/empresa/candidatos",       etiqueta: "Candidatos",    icono: Iconos.usuarios },
+    { ruta: "/empresa/plan",             etiqueta: "Mi plan",       icono: Iconos.estrella },
   ],
 };
 

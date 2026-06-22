@@ -2,14 +2,26 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { LABEL_PLAN, LIMITE_VACANTES } from "../../config/planesEmpresa";
+
+function formatearDia(diaStr) {
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const fecha = new Date(diaStr + "T00:00:00");
+  const dias = Math.round((hoy.getTime() - fecha.getTime()) / 86400000);
+  if (dias === 0) return "hoy";
+  if (dias === 1) return "ayer";
+  return `hace ${dias} días`;
+}
 
 export default function DashboardEmpresa() {
   const { usuario } = useAuth();
   const nombre = usuario?.nombre || "Empresa";
 
-  const [stats, setStats]               = useState({ ofertasActivas: 0, candidatosPostulados: 0, plan: "gratuito" });
-  const [ofertasRecientes, setOfertasRecientes] = useState([]);
-  const [cargando, setCargando]         = useState(true);
+  const [stats, setStats] = useState({
+    vacantesActivas: 0, totalPostulantes: 0, postulantesHoy: 0, plan: "gratuito",
+  });
+  const [actividad, setActividad] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     if (!usuario?.id) return;
@@ -18,12 +30,11 @@ export default function DashboardEmpresa() {
 
   async function cargar() {
     try {
-      const [{ data: todasOfertas }, { data: perfilEmpresa }] = await Promise.all([
+      const [{ data: ofertas }, { data: perfilEmpresa }] = await Promise.all([
         supabase
           .from("ofertas")
-          .select("id, titulo, estado, fecha_publicacion, postulaciones(count)")
-          .eq("empresa_id", usuario.id)
-          .order("fecha_publicacion", { ascending: false }),
+          .select("id, titulo, estado, postulaciones(count)")
+          .eq("empresa_id", usuario.id),
         supabase
           .from("perfiles_empresa")
           .select("plan")
@@ -31,13 +42,54 @@ export default function DashboardEmpresa() {
           .maybeSingle(),
       ]);
 
-      const lista             = todasOfertas || [];
-      const ofertasActivas    = lista.filter((o) => o.estado === "activa").length;
-      const candidatosPostulados = lista.reduce((s, o) => s + (o.postulaciones?.[0]?.count || 0), 0);
-      const plan              = perfilEmpresa?.plan || "gratuito";
+      const lista              = ofertas || [];
+      const ofertaIds           = lista.map((o) => o.id);
+      const ofertasMap          = Object.fromEntries(lista.map((o) => [o.id, o.titulo]));
+      const vacantesActivas     = lista.filter((o) => o.estado === "activa").length;
+      const totalPostulantes    = lista.reduce((s, o) => s + (o.postulaciones?.[0]?.count || 0), 0);
+      const plan                = perfilEmpresa?.plan || "gratuito";
 
-      setStats({ ofertasActivas, candidatosPostulados, plan });
-      setOfertasRecientes(lista.slice(0, 3));
+      let postulantesHoy = 0;
+      let actividadReciente = [];
+
+      if (ofertaIds.length > 0) {
+        const inicioHoy = new Date(); inicioHoy.setHours(0, 0, 0, 0);
+        const hace7Dias = new Date(Date.now() - 7 * 86400000);
+
+        const [{ data: postsHoy }, { data: postsRecientes }] = await Promise.all([
+          supabase
+            .from("postulaciones")
+            .select("id")
+            .in("oferta_id", ofertaIds)
+            .gte("fecha_postulacion", inicioHoy.toISOString()),
+          supabase
+            .from("postulaciones")
+            .select("oferta_id, fecha_postulacion")
+            .in("oferta_id", ofertaIds)
+            .gte("fecha_postulacion", hace7Dias.toISOString())
+            .order("fecha_postulacion", { ascending: false }),
+        ]);
+
+        postulantesHoy = postsHoy?.length || 0;
+
+        const grupos = {};
+        (postsRecientes || []).forEach((p) => {
+          const dia = p.fecha_postulacion.slice(0, 10);
+          const key = `${p.oferta_id}__${dia}`;
+          grupos[key] = (grupos[key] || 0) + 1;
+        });
+
+        actividadReciente = Object.entries(grupos)
+          .map(([key, count]) => {
+            const [ofertaId, dia] = key.split("__");
+            return { dia, count, titulo: ofertasMap[ofertaId] || "una vacante" };
+          })
+          .sort((a, b) => b.dia.localeCompare(a.dia))
+          .slice(0, 6);
+      }
+
+      setStats({ vacantesActivas, totalPostulantes, postulantesHoy, plan });
+      setActividad(actividadReciente);
     } catch (_) {
       // silencioso
     } finally {
@@ -45,32 +97,22 @@ export default function DashboardEmpresa() {
     }
   }
 
-  function formatearFecha(fecha) {
-    if (!fecha) return "";
-    const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
-    if (dias === 0) return "hoy";
-    if (dias === 1) return "hace 1 día";
-    if (dias < 7)  return `hace ${dias} días`;
-    const semanas = Math.floor(dias / 7);
-    if (semanas === 1) return "hace 1 semana";
-    if (semanas < 4)  return `hace ${semanas} semanas`;
-    return `hace ${Math.floor(dias / 30)} meses`;
-  }
-
-  const planLabel = { gratuito: "Gratis", basico: "Básico", premium: "Premium" };
+  const limite = LIMITE_VACANTES[stats.plan] ?? 1;
+  const enLimite = Number.isFinite(limite) && stats.vacantesActivas >= limite;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-azul-marino">¡Hola, {nombre}! 👋</h1>
-        <p className="text-gray-500 mt-1">Gestiona tus ofertas y encuentra el talento que necesitas.</p>
+        <p className="text-gray-500 mt-1">Gestiona tus vacantes y encuentra el talento que necesitas.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      {/* Tarjetas resumen */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Ofertas activas",       valor: cargando ? "..." : String(stats.ofertasActivas),        icono: "📋", color: "bg-blue-50 border-blue-100" },
-          { label: "Candidatos postulados", valor: cargando ? "..." : String(stats.candidatosPostulados),  icono: "👥", color: "bg-green-50 border-green-100" },
-          { label: "Plan actual",           valor: cargando ? "..." : (planLabel[stats.plan] || "Gratis"), icono: "⭐", color: "bg-yellow-50 border-yellow-100" },
+          { label: "Vacantes activas",       valor: cargando ? "..." : String(stats.vacantesActivas),  icono: "📋", color: "bg-blue-50 border-blue-100" },
+          { label: "Total postulantes",      valor: cargando ? "..." : String(stats.totalPostulantes), icono: "👥", color: "bg-green-50 border-green-100" },
+          { label: "Postulantes nuevos hoy", valor: cargando ? "..." : String(stats.postulantesHoy),   icono: "✨", color: "bg-purple-50 border-purple-100" },
         ].map((stat) => (
           <div key={stat.label} className={`rounded-2xl border p-5 shadow-card hover:shadow-card-hover transition-shadow duration-200 ${stat.color}`}>
             <div className="text-2xl mb-2">{stat.icono}</div>
@@ -80,55 +122,47 @@ export default function DashboardEmpresa() {
         ))}
       </div>
 
-      {stats.plan === "gratuito" && !cargando && (
+      {/* Alerta de límite de plan */}
+      {!cargando && enLimite && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <span className="text-xl flex-shrink-0">💡</span>
+          <span className="text-xl flex-shrink-0">⚠️</span>
           <div>
-            <p className="text-yellow-800 font-semibold text-sm">Estás en el plan gratuito (1 oferta activa al mes)</p>
+            <p className="text-yellow-800 font-semibold text-sm">
+              Estás en el límite de tu plan {LABEL_PLAN[stats.plan]} ({stats.vacantesActivas}/{limite} vacantes activas)
+            </p>
             <p className="text-yellow-700 text-xs mt-0.5">
-              Actualiza tu plan para publicar más ofertas y acceder al banco de hojas de vida.{" "}
-              <Link to="/empresa/suscripcion" className="font-bold underline">Ver planes →</Link>
+              Mejora tu plan para publicar más vacantes y desbloquear más beneficios.{" "}
+              <Link to="/empresa/plan" className="font-bold underline">Ver planes →</Link>
             </p>
           </div>
         </div>
       )}
 
+      {/* Actividad reciente */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="font-bold text-azul-marino">Mis últimas ofertas</h2>
-          <Link to="/empresa/ofertas" className="text-esmeralda text-sm font-semibold hover:underline">Ver todas →</Link>
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-azul-marino">Actividad reciente</h2>
         </div>
         <div className="divide-y divide-gray-50">
           {cargando ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="px-6 py-4">
-                <div className="h-4 bg-gray-100 rounded animate-pulse mb-2 w-3/4" />
-                <div className="h-3 bg-gray-100 rounded animate-pulse w-1/2" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
               </div>
             ))
-          ) : ofertasRecientes.length === 0 ? (
+          ) : actividad.length === 0 ? (
             <div className="px-6 py-8 text-center text-gray-400 text-sm">
-              Aún no has publicado ninguna oferta.{" "}
-              <Link to="/empresa/publicar-oferta" className="text-esmeralda font-semibold underline">Publicar ahora →</Link>
+              Aún no hay actividad reciente. Cuando alguien se postule a tus vacantes, lo verás aquí.
             </div>
           ) : (
-            ofertasRecientes.map((o) => (
-              <div key={o.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-semibold text-azul-marino text-sm truncate">{o.titulo}</p>
-                  <p className="text-gray-400 text-xs mt-0.5">Publicada {formatearFecha(o.fecha_publicacion)}</p>
-                </div>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <div className="text-center hidden sm:block">
-                    <p className="font-bold text-azul-marino">{o.postulaciones?.[0]?.count || 0}</p>
-                    <p className="text-gray-400 text-xs">postulados</p>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                    o.estado === "activa" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  }`}>
-                    {o.estado === "activa" ? "Activa" : "Cerrada"}
-                  </span>
-                </div>
+            actividad.map((a, i) => (
+              <div key={i} className="px-6 py-4 flex items-center gap-3">
+                <span className="text-xl flex-shrink-0">👤</span>
+                <p className="text-sm text-gray-600">
+                  <strong className="text-azul-marino">{a.count}</strong>{" "}
+                  {a.count === 1 ? "candidato aplicó" : "candidatos aplicaron"} a{" "}
+                  <strong className="text-azul-marino">{a.titulo}</strong> {formatearDia(a.dia)}
+                </p>
               </div>
             ))
           )}
@@ -139,15 +173,15 @@ export default function DashboardEmpresa() {
         <Link to="/empresa/publicar-oferta" className="bg-gradient-to-br from-[#0ba870] to-esmeralda-hover hover:brightness-105 text-white rounded-2xl p-5 flex items-center gap-4 transition-all shadow-btn active:scale-[0.99]">
           <span className="text-3xl">➕</span>
           <div>
-            <p className="font-bold">Publicar nueva oferta</p>
+            <p className="font-bold">Publicar nueva vacante</p>
             <p className="text-green-100 text-sm">Llega a miles de profesionales</p>
           </div>
         </Link>
         <Link to="/empresa/candidatos" className="bg-gradient-to-br from-azul-claro to-azul-marino hover:brightness-105 text-white rounded-2xl p-5 flex items-center gap-4 transition-all shadow-btn active:scale-[0.99]">
           <span className="text-3xl">👥</span>
           <div>
-            <p className="font-bold">Banco de candidatos</p>
-            <p className="text-blue-200 text-sm">Disponible en plan Premium</p>
+            <p className="font-bold">Ver candidatos</p>
+            <p className="text-blue-200 text-sm">Revisa quién se ha postulado</p>
           </div>
         </Link>
       </div>
