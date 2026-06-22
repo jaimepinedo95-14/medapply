@@ -32,3 +32,6 @@ npm-debug.log*
 
 # Coverage
 coverage/
+
+# Supabase CLI local cache
+supabase/.temp/
