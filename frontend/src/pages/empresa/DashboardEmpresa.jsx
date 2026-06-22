@@ -21,6 +21,7 @@ export default function DashboardEmpresa() {
     vacantesActivas: 0, totalPostulantes: 0, postulantesHoy: 0, plan: "gratuito",
   });
   const [actividad, setActividad] = useState([]);
+  const [rendimiento, setRendimiento] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -88,8 +89,36 @@ export default function DashboardEmpresa() {
           .slice(0, 6);
       }
 
+      // Rendimiento por vacante activa: vistas (tabla visitas_ofertas si existe),
+      // postulantes y tasa de conversión.
+      const ofertasActivasList = lista.filter((o) => o.estado === "activa");
+      let visitasPorOferta = {};
+      if (ofertasActivasList.length > 0) {
+        try {
+          const { data: visitas, error: errVisitas } = await supabase
+            .from("visitas_ofertas")
+            .select("oferta_id")
+            .in("oferta_id", ofertasActivasList.map((o) => o.id));
+          if (!errVisitas) {
+            (visitas || []).forEach((v) => {
+              visitasPorOferta[v.oferta_id] = (visitasPorOferta[v.oferta_id] || 0) + 1;
+            });
+          }
+        } catch (_) {
+          // Tabla visitas_ofertas no existe todavía — se queda en 0
+        }
+      }
+
+      const rendimientoVacantes = ofertasActivasList.map((o) => {
+        const vistas = visitasPorOferta[o.id] || 0;
+        const postulantesOferta = o.postulaciones?.[0]?.count || 0;
+        const conversion = vistas > 0 ? Math.round((postulantesOferta / vistas) * 100) : 0;
+        return { id: o.id, titulo: o.titulo, vistas, postulantes: postulantesOferta, conversion };
+      });
+
       setStats({ vacantesActivas, totalPostulantes, postulantesHoy, plan });
       setActividad(actividadReciente);
+      setRendimiento(rendimientoVacantes);
     } catch (_) {
       // silencioso
     } finally {
@@ -167,6 +196,55 @@ export default function DashboardEmpresa() {
             ))
           )}
         </div>
+      </div>
+
+      {/* Rendimiento de tus vacantes */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-azul-marino">Rendimiento de tus vacantes</h2>
+        </div>
+        {cargando ? (
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : rendimiento.length === 0 ? (
+          <div className="px-6 py-8 text-center text-gray-400 text-sm">
+            Publica tu primera vacante para ver estadísticas.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-3 text-left font-semibold text-azul-marino">Cargo</th>
+                  <th className="px-4 py-3 text-center font-semibold text-azul-marino">Vistas</th>
+                  <th className="px-4 py-3 text-center font-semibold text-azul-marino">Postulantes</th>
+                  <th className="px-4 py-3 text-center font-semibold text-azul-marino">Conversión</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {rendimiento.map((r) => (
+                  <tr key={r.id}>
+                    <td className="px-6 py-3 font-medium text-azul-marino truncate max-w-xs">{r.titulo}</td>
+                    <td className="px-4 py-3 text-center text-gray-600">{r.vistas}</td>
+                    <td className="px-4 py-3 text-center font-bold text-esmeralda">{r.postulantes}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        r.conversion >= 10 ? "bg-green-100 text-green-700"
+                        : r.conversion > 0 ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-400"
+                      }`}>
+                        {r.conversion}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

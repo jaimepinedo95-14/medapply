@@ -31,10 +31,11 @@ const LINKS = {
     { ruta: "/candidato/configuracion",  etiqueta: "Configuración",     icono: Iconos.config },
   ],
   empresa: [
-    { ruta: "/empresa/dashboard",        etiqueta: "Inicio",        icono: Iconos.inicio },
-    { ruta: "/empresa/ofertas",          etiqueta: "Mis vacantes",  icono: Iconos.lista },
-    { ruta: "/empresa/candidatos",       etiqueta: "Candidatos",    icono: Iconos.usuarios },
-    { ruta: "/empresa/plan",             etiqueta: "Mi plan",       icono: Iconos.estrella },
+    { ruta: "/empresa/dashboard",         etiqueta: "Inicio",             icono: Iconos.inicio },
+    { ruta: "/empresa/ofertas",           etiqueta: "Mis vacantes",       icono: Iconos.lista },
+    { ruta: "/empresa/candidatos",        etiqueta: "Candidatos",         icono: Iconos.usuarios },
+    { ruta: "/empresa/buscar-candidatos", etiqueta: "Buscar candidatos",  icono: Iconos.buscar },
+    { ruta: "/empresa/plan",              etiqueta: "Mi plan",            icono: Iconos.estrella },
   ],
 };
 
@@ -134,8 +135,11 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
   );
 }
 
-// Layout principal del dashboard — envuelve todas las páginas internas
-export default function LayoutDashboard({ tipo }) {
+// Layout principal del dashboard — envuelve todas las páginas internas.
+// Si recibe `children` los renderiza directamente (uso desde rutas públicas
+// cuando el usuario autenticado es empresa); si no, renderiza el <Outlet/>
+// normal de las rutas anidadas de /empresa/* y /candidato/*.
+export default function LayoutDashboard({ tipo, children }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   return (
@@ -165,7 +169,7 @@ export default function LayoutDashboard({ tipo }) {
 
         {/* Contenido de la página actual */}
         <main className="flex-1 overflow-y-auto">
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
     </div>

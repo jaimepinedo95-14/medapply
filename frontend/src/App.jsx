@@ -7,6 +7,7 @@ import { NotificacionesProvider } from "./context/NotificacionesContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import LayoutDashboard from "./components/dashboard/LayoutDashboard";
+import BannerVistaEmpresa from "./components/dashboard/BannerVistaEmpresa";
 import LayoutAdmin from "./components/admin/LayoutAdmin";
 import LayoutModerador from "./components/moderador/LayoutModerador";
 
@@ -48,6 +49,7 @@ import DashboardEmpresa from "./pages/empresa/DashboardEmpresa";
 import PublicarOferta from "./pages/empresa/PublicarOferta";
 import MisOfertas from "./pages/empresa/MisOfertas";
 import Candidatos from "./pages/empresa/Candidatos";
+import BuscarCandidatos from "./pages/empresa/BuscarCandidatos";
 import MiPlan from "./pages/empresa/MiPlan";
 import ConfiguracionEmpresa from "./pages/empresa/ConfiguracionEmpresa";
 import Estadisticas from "./pages/empresa/Estadisticas";
@@ -65,7 +67,22 @@ import ModerarOfertas from "./pages/moderador/ModerarOfertas";
 import HistorialModeracion from "./pages/moderador/HistorialModeracion";
 
 // ── Layout público ────────────────────────────────────────────────────────────
+// Si el usuario autenticado es una empresa, NO mostramos el navbar de
+// candidatos: mantenemos su panel lateral visible (igual que en /empresa/*)
+// con un banner que le permite volver a su panel con un clic. Así una empresa
+// nunca pierde su contexto de panel al navegar a páginas públicas como /empleos.
 function LayoutPublico({ children }) {
+  const { usuario } = useAuth();
+
+  if (usuario?.rol === "empresa") {
+    return (
+      <LayoutDashboard tipo="empresa">
+        <BannerVistaEmpresa />
+        {children}
+      </LayoutDashboard>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -146,14 +163,16 @@ function App() {
               <LayoutDashboard tipo="empresa" />
             </RutaProtegida>
           }>
-            <Route path="dashboard"       element={<DashboardEmpresa />} />
-            <Route path="ofertas"         element={<MisOfertas />} />
-            <Route path="publicar-oferta" element={<PublicarOferta />} />
-            <Route path="candidatos"      element={<Candidatos />} />
-            <Route path="plan"            element={<MiPlan />} />
-            <Route path="suscripcion"     element={<MiPlan />} />
-            <Route path="estadisticas"    element={<Estadisticas />} />
-            <Route path="configuracion"   element={<ConfiguracionEmpresa />} />
+            <Route path="dashboard"          element={<DashboardEmpresa />} />
+            <Route path="ofertas"            element={<MisOfertas />} />
+            <Route path="mis-vacantes"       element={<MisOfertas />} />
+            <Route path="publicar-oferta"    element={<PublicarOferta />} />
+            <Route path="candidatos"         element={<Candidatos />} />
+            <Route path="buscar-candidatos"  element={<BuscarCandidatos />} />
+            <Route path="plan"               element={<MiPlan />} />
+            <Route path="suscripcion"        element={<MiPlan />} />
+            <Route path="estadisticas"       element={<Estadisticas />} />
+            <Route path="configuracion"      element={<ConfiguracionEmpresa />} />
           </Route>
 
           {/* ── Panel admin (admin + superadmin) ── */}

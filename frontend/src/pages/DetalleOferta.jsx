@@ -161,11 +161,15 @@ export default function DetalleOferta() {
             Ver mis postulaciones →
           </Link>
         </div>
-      ) : usuario ? (
+      ) : usuario?.rol === "candidato" ? (
         <button onClick={manejarPostulacion} disabled={postulando}
           className="w-full btn-primario py-4 text-base disabled:opacity-60">
           {postulando ? "Enviando..." : "✅ Postularme a esta oferta"}
         </button>
+      ) : usuario ? (
+        <p className="text-center text-sm text-gray-400 py-4">
+          Solo los candidatos pueden postularse a esta oferta.
+        </p>
       ) : (
         <>
           <Link to="/login"

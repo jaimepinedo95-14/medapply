@@ -36,6 +36,14 @@ export const PUEDE_CONTACTAR = {
   premium:  true,
 };
 
+// Puede ver el perfil completo de un candidato encontrado en "Buscar candidatos"
+export const PUEDE_VER_PERFIL_BUSQUEDA = {
+  gratuito: false,
+  basico:   false,
+  estandar: true,
+  premium:  true,
+};
+
 export const PLANES_INFO = [
   {
     key: "gratuito",
