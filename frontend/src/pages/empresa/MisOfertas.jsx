@@ -184,7 +184,7 @@ export default function MisOfertas() {
           )}
           {tipo === "activa" && (
             <button onClick={() => setRetiroPendiente(o)}
-              className="text-sm text-gray-400 hover:text-red-500 transition-colors self-center ml-auto">
+              className="text-sm font-semibold text-white px-4 py-2 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] transition-colors self-center ml-auto">
               Retirar oferta
             </button>
           )}
