@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { PUEDE_VER_HV, PUEDE_CONTACTAR, LABEL_PLAN } from "../../config/planesEmpresa";
 
 const ESTADOS = [
   { value: "pendiente",       label: "Nuevo",          color: "bg-blue-100 text-blue-700" },
@@ -19,10 +18,21 @@ function ModalContacto({ candidato, onCerrar }) {
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl p-6 text-center">
         <h3 className="font-bold text-azul-marino mb-1">{candidato.nombre}</h3>
         <p className="text-gray-400 text-xs mb-4">Información de contacto</p>
-        <a href={`mailto:${candidato.email}`}
-          className="block bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-azul-marino font-semibold mb-4 hover:bg-gray-100 transition-colors break-all">
-          ✉️ {candidato.email}
-        </a>
+        {candidato.email && (
+          <a href={`mailto:${candidato.email}`}
+            className="block bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-azul-marino font-semibold mb-3 hover:bg-gray-100 transition-colors break-all">
+            ✉️ {candidato.email}
+          </a>
+        )}
+        {candidato.telefono && (
+          <a href={`tel:${candidato.telefono}`}
+            className="block bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-azul-marino font-semibold mb-4 hover:bg-gray-100 transition-colors">
+            📞 {candidato.telefono}
+          </a>
+        )}
+        {!candidato.email && !candidato.telefono && (
+          <p className="text-gray-400 text-sm mb-4">Este candidato no registró datos de contacto.</p>
+        )}
         <button onClick={onCerrar} className="btn-outline w-full text-sm py-2.5">Cerrar</button>
       </div>
     </div>
@@ -34,27 +44,23 @@ export default function Candidatos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const ofertaSeleccionada = searchParams.get("oferta") || "";
 
-  const [plan, setPlan]               = useState("gratuito");
   const [misOfertas, setMisOfertas]   = useState([]);
   const [postulantes, setPostulantes] = useState([]);
   const [cargando, setCargando]       = useState(true);
   const [error, setError]             = useState(null);
   const [contactoAbierto, setContactoAbierto] = useState(null);
 
-  const puedeVerHV      = PUEDE_VER_HV[plan] ?? false;
-  const puedeContactar   = PUEDE_CONTACTAR[plan] ?? false;
-
   const cargar = useCallback(async () => {
     if (!usuario?.id) return;
     setCargando(true);
     setError(null);
     try {
-      const [{ data: perfilEmpresa }, { data: ofertas }] = await Promise.all([
-        supabase.from("perfiles_empresa").select("plan").eq("usuario_id", usuario.id).maybeSingle(),
-        supabase.from("ofertas").select("id, titulo").eq("empresa_id", usuario.id).order("fecha_publicacion", { ascending: false }),
-      ]);
+      const { data: ofertas } = await supabase
+        .from("ofertas")
+        .select("id, titulo")
+        .eq("empresa_id", usuario.id)
+        .order("fecha_publicacion", { ascending: false });
 
-      setPlan(perfilEmpresa?.plan || "gratuito");
       setMisOfertas(ofertas || []);
 
       const ofertaIds = (ofertas || []).map((o) => o.id);
@@ -81,7 +87,7 @@ export default function Candidatos() {
       if (candidatoIds.length > 0) {
         const { data: perfiles } = await supabase
           .from("perfiles_candidato")
-          .select("usuario_id, categoria_profesional, ciudad, hoja_de_vida_url, usuarios(nombre, email)")
+          .select("usuario_id, categoria_profesional, ciudad, telefono, hoja_de_vida_url, usuarios(nombre, email)")
           .in("usuario_id", candidatoIds);
         perfilesMap = Object.fromEntries((perfiles || []).map((p) => [p.usuario_id, p]));
       }
@@ -94,6 +100,7 @@ export default function Candidatos() {
             ofertaTitulo: ofertasMap[p.oferta_id] || "Vacante",
             nombre: perfil?.usuarios?.nombre || "Candidato",
             email: perfil?.usuarios?.email || null,
+            telefono: perfil?.telefono || null,
             categoria: perfil?.categoria_profesional || "Sin especialidad",
             ciudad: perfil?.ciudad || "",
             hojaDeVidaUrl: perfil?.hoja_de_vida_url || null,
@@ -124,12 +131,10 @@ export default function Candidatos() {
   }
 
   function verHojaDeVida(p) {
-    if (!puedeVerHV) return;
     if (p.hojaDeVidaUrl) window.open(p.hojaDeVidaUrl, "_blank", "noopener,noreferrer");
   }
 
   function contactar(p) {
-    if (!puedeContactar || !p.email) return;
     setContactoAbierto(p);
   }
 
@@ -208,42 +213,22 @@ export default function Candidatos() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-50">
-                  {/* Ver hoja de vida */}
-                  {puedeVerHV ? (
-                    <button
-                      onClick={() => verHojaDeVida(p)}
-                      disabled={!p.hojaDeVidaUrl}
-                      className="text-sm border border-azul-marino text-azul-marino rounded-xl px-4 py-2 hover:bg-azul-marino hover:text-white transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-azul-marino"
-                    >
-                      📄 {p.hojaDeVidaUrl ? "Ver hoja de vida completa" : "Sin hoja de vida"}
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      title="Disponible desde el plan Básico"
-                      className="text-sm border border-gray-200 text-gray-400 rounded-xl px-4 py-2 font-semibold cursor-not-allowed bg-gray-50"
-                    >
-                      🔒 Ver hoja de vida completa
-                    </button>
-                  )}
+                  {/* Ver hoja de vida — sin restricción de plan: es un postulante a tu propia vacante */}
+                  <button
+                    onClick={() => verHojaDeVida(p)}
+                    disabled={!p.hojaDeVidaUrl}
+                    className="text-sm border border-azul-marino text-azul-marino rounded-xl px-4 py-2 hover:bg-azul-marino hover:text-white transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-azul-marino"
+                  >
+                    📄 {p.hojaDeVidaUrl ? "Ver hoja de vida completa" : "Sin hoja de vida"}
+                  </button>
 
-                  {/* Contactar */}
-                  {puedeContactar ? (
-                    <button
-                      onClick={() => contactar(p)}
-                      className="btn-primario text-sm py-2 px-4"
-                    >
-                      ✉️ Contactar
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      title="Disponible desde el plan Estándar"
-                      className="text-sm bg-gray-100 text-gray-400 rounded-xl px-4 py-2 font-semibold cursor-not-allowed"
-                    >
-                      🔒 Contactar
-                    </button>
-                  )}
+                  {/* Contactar — sin restricción de plan */}
+                  <button
+                    onClick={() => contactar(p)}
+                    className="btn-primario text-sm py-2 px-4"
+                  >
+                    ✉️ Contactar
+                  </button>
 
                   {/* Cambiar estado */}
                   <select
@@ -259,15 +244,6 @@ export default function Candidatos() {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {!cargando && (!puedeVerHV || !puedeContactar) && (
-        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-center">
-          <p className="text-azul-marino text-sm font-semibold">
-            Estás en el plan {LABEL_PLAN[plan]}.{" "}
-            <Link to="/empresa/plan" className="underline">Mejora tu plan</Link> para desbloquear hojas de vida completas y contacto directo.
-          </p>
         </div>
       )}
 
