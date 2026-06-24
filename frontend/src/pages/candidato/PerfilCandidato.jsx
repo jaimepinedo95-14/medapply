@@ -19,6 +19,8 @@ const CATEGORIAS_CON_RETHUS = [
   "odontólogo/a", "bacteriólogo/a", "fisioterapeuta",
 ];
 
+// El video de presentación es 100% opcional y NO suma al porcentaje de
+// completitud — un candidato debe poder llegar al 100% sin subirlo.
 const SECCIONES_CONFIG = [
   { key: "foto",        pts: 10, label: "Foto de perfil",       icono: "📷" },
   { key: "basicos",     pts: 20, label: "Información básica",   icono: "📋" },
@@ -26,8 +28,8 @@ const SECCIONES_CONFIG = [
   { key: "rethus",      pts: 15, label: "Verificación ReTHUS",  icono: "🏅" },
   { key: "experiencia", pts: 20, label: "Experiencia laboral",  icono: "💼" },
   { key: "educacion",   pts: 15, label: "Educación",            icono: "🎓" },
-  { key: "cv",          pts: 10, label: "Hoja de vida PDF",     icono: "📄" },
-  { key: "video",       pts:  5, label: "Video presentación",   icono: "🎥" },
+  { key: "cv",          pts: 15, label: "Hoja de vida PDF",     icono: "📄" },
+  { key: "video",       pts:  0, label: "Video presentación",   icono: "🎥" },
 ];
 
 function calcularProgreso(p) {
@@ -39,8 +41,7 @@ function calcularProgreso(p) {
   if (requiereReTHUS && p.tarjetaReTHUS)     pts += 15;
   if (p.experiencias.length > 0)             pts += 20;
   if (p.educaciones.length > 0)              pts += 15;
-  if (p.cvNombre)                            pts += 10;
-  if (p.videoNombre)                         pts +=  5;
+  if (p.cvNombre)                            pts += 15;
   return pts;
 }
 
@@ -93,11 +94,13 @@ function TarjetaSeccion({ icono, titulo, puntos, completada, hint, abierta, onTo
           <p className="text-xs text-gray-400 mt-0.5 truncate">
             {completada
               ? (hint || "Completado · toca para editar")
-              : `Añade +${puntos}% a tu perfil`}
+              : puntos > 0
+                ? `Añade +${puntos}% a tu perfil`
+                : "No afecta tu porcentaje de perfil"}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {!completada && (
+          {!completada && puntos > 0 && (
             <span className="text-xs bg-esmeralda/10 text-esmeralda font-bold px-2 py-0.5 rounded-full">
               +{puntos}%
             </span>
@@ -146,6 +149,8 @@ export default function PerfilCandidato() {
   const [errEdu, setErrEdu]   = useState({});
 
   const [videoError, setVideoError] = useState(null);
+  const [cvError, setCvError]       = useState(null);
+  const [arrastrandoCV, setArrastrandoCV] = useState(false);
   const [guardando, setGuardando]   = useState(false);
   const [guardado, setGuardado]     = useState(false);
   const [errorGuardar, setErrorGuardar] = useState(null);
@@ -218,14 +223,40 @@ export default function PerfilCandidato() {
     reader.readAsDataURL(file);
   };
 
-  const handleCV = (e) => {
-    const file = e.target.files?.[0];
+  const procesarArchivoCV = (file) => {
     if (!file) return;
-    if (file.type !== "application/pdf") return;
-    if (file.size > 5 * 1024 * 1024) return;
+    if (file.type !== "application/pdf") {
+      setCvError("Solo se aceptan archivos PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setCvError("El archivo supera el tamaño máximo de 5 MB.");
+      return;
+    }
+    setCvError(null);
     cvFileRef.current = file;
     setPerfil((p) => ({ ...p, cvNombre: file.name }));
     setSeccion(null);
+  };
+
+  const handleCV = (e) => {
+    procesarArchivoCV(e.target.files?.[0]);
+  };
+
+  const handleDragOverCV = (e) => {
+    e.preventDefault();
+    setArrastrandoCV(true);
+  };
+
+  const handleDragLeaveCV = (e) => {
+    e.preventDefault();
+    setArrastrandoCV(false);
+  };
+
+  const handleDropCV = (e) => {
+    e.preventDefault();
+    setArrastrandoCV(false);
+    procesarArchivoCV(e.dataTransfer.files?.[0]);
   };
 
   const handleVideo = (e) => {
@@ -769,7 +800,7 @@ export default function PerfilCandidato() {
 
         {/* 6. Hoja de vida PDF */}
         <TarjetaSeccion
-          icono="📄" titulo="Hoja de vida PDF" puntos={10}
+          icono="📄" titulo="Hoja de vida PDF" puntos={15}
           completada={!!perfil.cvNombre}
           hint={perfil.cvNombre || undefined}
           abierta={seccion === "cv"}
@@ -777,30 +808,38 @@ export default function PerfilCandidato() {
         >
           <div className="pt-1">
             <div
-              className="border-2 border-dashed border-gray-200 hover:border-esmeralda rounded-2xl p-7 text-center cursor-pointer transition-colors"
+              className={`border-2 border-dashed rounded-2xl p-7 text-center cursor-pointer transition-colors ${
+                arrastrandoCV ? "border-esmeralda bg-esmeralda/5" : "border-gray-200 hover:border-esmeralda"
+              }`}
               onClick={() => cvRef.current?.click()}
+              onDragOver={handleDragOverCV}
+              onDragLeave={handleDragLeaveCV}
+              onDrop={handleDropCV}
             >
               {perfil.cvNombre ? (
                 <>
                   <div className="text-4xl mb-2">📄</div>
                   <p className="font-semibold text-azul-marino text-sm">{perfil.cvNombre}</p>
-                  <p className="text-gray-400 text-xs mt-1">Toca para reemplazar</p>
+                  <p className="text-gray-400 text-xs mt-1">Arrastra otro archivo o toca para reemplazar</p>
                 </>
               ) : (
                 <>
-                  <div className="text-4xl mb-2">📤</div>
-                  <p className="font-semibold text-gray-700 text-sm">Arrastra tu HV o toca para subir</p>
+                  <div className="text-4xl mb-2">{arrastrandoCV ? "📥" : "📤"}</div>
+                  <p className="font-semibold text-gray-700 text-sm">
+                    {arrastrandoCV ? "Suelta el archivo aquí" : "Arrastra tu HV o toca para subir"}
+                  </p>
                   <p className="text-gray-400 text-xs mt-1">PDF · máximo 5 MB</p>
                 </>
               )}
             </div>
+            {cvError && <p className="text-red-500 text-sm text-center mt-2">{cvError}</p>}
             <input ref={cvRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleCV} />
           </div>
         </TarjetaSeccion>
 
         {/* 7. Video de presentación */}
         <TarjetaSeccion
-          icono="🎥" titulo="Video de presentación" puntos={5} opcional
+          icono="🎥" titulo="Video de presentación" puntos={0} opcional
           completada={!!perfil.videoNombre}
           hint={perfil.videoNombre || undefined}
           abierta={seccion === "video"}

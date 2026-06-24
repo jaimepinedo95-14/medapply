@@ -49,6 +49,7 @@ export default function Candidatos() {
   const [cargando, setCargando]       = useState(true);
   const [error, setError]             = useState(null);
   const [contactoAbierto, setContactoAbierto] = useState(null);
+  const [mensajeCV, setMensajeCV]     = useState("");
 
   const cargar = useCallback(async () => {
     if (!usuario?.id) return;
@@ -103,7 +104,7 @@ export default function Candidatos() {
             telefono: perfil?.telefono || null,
             categoria: perfil?.categoria_profesional || "Sin especialidad",
             ciudad: perfil?.ciudad || "",
-            hojaDeVidaUrl: perfil?.hoja_de_vida_url || null,
+            hojaDeVidaPath: perfil?.hoja_de_vida_url || null, // path en bucket privado 'cvs', no una URL
           };
         })
       );
@@ -130,8 +131,28 @@ export default function Candidatos() {
     else setSearchParams({});
   }
 
-  function verHojaDeVida(p) {
-    if (p.hojaDeVidaUrl) window.open(p.hojaDeVidaUrl, "_blank", "noopener,noreferrer");
+  // El bucket 'cvs' es privado: hojaDeVidaPath es solo el path guardado en
+  // perfiles_candidato.hoja_de_vida_url (ej. "abc-123/cv.pdf"), no una URL
+  // abrible directamente. Hay que pedirle a Supabase Storage una signed URL.
+  async function verHojaDeVida(p) {
+    if (!p.hojaDeVidaPath) {
+      mostrarMensajeCV("Este candidato aún no ha subido su hoja de vida.");
+      return;
+    }
+    const { data, error: errSigned } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(p.hojaDeVidaPath, 60);
+
+    if (errSigned || !data?.signedUrl) {
+      mostrarMensajeCV("No se pudo abrir la hoja de vida. Intenta de nuevo.");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function mostrarMensajeCV(msg) {
+    setMensajeCV(msg);
+    setTimeout(() => setMensajeCV(""), 4000);
   }
 
   function contactar(p) {
@@ -216,10 +237,9 @@ export default function Candidatos() {
                   {/* Ver hoja de vida — sin restricción de plan: es un postulante a tu propia vacante */}
                   <button
                     onClick={() => verHojaDeVida(p)}
-                    disabled={!p.hojaDeVidaUrl}
-                    className="text-sm border border-azul-marino text-azul-marino rounded-xl px-4 py-2 hover:bg-azul-marino hover:text-white transition-colors font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-azul-marino"
+                    className="text-sm border border-azul-marino text-azul-marino rounded-xl px-4 py-2 hover:bg-azul-marino hover:text-white transition-colors font-semibold"
                   >
-                    📄 {p.hojaDeVidaUrl ? "Ver hoja de vida completa" : "Sin hoja de vida"}
+                    📄 Ver hoja de vida completa
                   </button>
 
                   {/* Contactar — sin restricción de plan */}
@@ -249,6 +269,12 @@ export default function Candidatos() {
 
       {contactoAbierto && (
         <ModalContacto candidato={contactoAbierto} onCerrar={() => setContactoAbierto(null)} />
+      )}
+
+      {mensajeCV && (
+        <div className="fixed bottom-6 right-6 bg-azul-marino text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold z-50 max-w-sm">
+          {mensajeCV}
+        </div>
       )}
     </div>
   );
