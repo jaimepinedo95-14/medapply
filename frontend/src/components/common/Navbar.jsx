@@ -197,7 +197,7 @@ export default function Navbar() {
                 <span className="text-azul-marino font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
-              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span className="text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
 
@@ -249,10 +249,16 @@ export default function Navbar() {
               </Link>
             )}
             {!usuario && (
-              <Link to="/registro/candidato"
-                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
-                Registrarse
-              </Link>
+              <>
+                <Link to="/login"
+                  className="border border-esmeralda text-esmeralda text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors hover:bg-esmeralda/5">
+                  Iniciar sesión
+                </Link>
+                <Link to="/registro/candidato"
+                  className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
+                  Registrarse
+                </Link>
+              </>
             )}
             <button onClick={() => setMenuAbierto((p) => !p)}
               className="text-azul-marino p-2" aria-label="Abrir menú">
