@@ -248,6 +248,12 @@ export default function Navbar() {
                 )}
               </Link>
             )}
+            {!usuario && (
+              <Link to="/registro/candidato"
+                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
+                Registrarse
+              </Link>
+            )}
             <button onClick={() => setMenuAbierto((p) => !p)}
               className="text-azul-marino p-2" aria-label="Abrir menú">
               {menuAbierto ? <IconoCerrar /> : <IconoMenu />}
