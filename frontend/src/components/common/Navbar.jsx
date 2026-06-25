@@ -188,13 +188,8 @@ export default function Navbar() {
         <div className="flex items-center h-16 gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-esmeralda-claro to-esmeralda-hover rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <span className="text-white font-bold text-lg leading-none">+</span>
-            </div>
-            <span className="font-bold text-xl tracking-tight">
-              <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
-            </span>
+          <Link to="/" className="flex items-center flex-shrink-0">
+            <img src="/logo-medapply.svg" alt="MedApply" height="48" />
           </Link>
 
           {/* Iniciar sesión + Registrarse — solo móvil, entre el logo y la hamburguesa */}
