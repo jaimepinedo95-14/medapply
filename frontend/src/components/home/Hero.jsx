@@ -47,7 +47,7 @@ export default function Hero() {
         {/* Texto principal */}
         <div className="text-center mb-10">
           <span className="inline-block bg-esmeralda text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
-            🏥 La primera bolsa de empleo exclusiva del sector salud en Colombia
+            🏥 La plataforma de empleo 100% del sector salud
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-5">
             Encuentra tu próximo empleo
@@ -55,7 +55,7 @@ export default function Hero() {
             <span className="text-esmeralda-claro">en salud</span>
           </h1>
           <p className="text-lg md:text-xl text-blue-200 max-w-2xl mx-auto">
-            La primera bolsa de empleo exclusiva del sector salud en Colombia.
+            La plataforma de empleo 100% del sector salud.
             Conectamos talento médico con las mejores instituciones.
           </p>
         </div>
