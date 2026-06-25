@@ -194,7 +194,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col leading-none">
               <div className="flex items-baseline">
-                <span className="text-white font-bold text-xl">Med</span>
+                <span className="text-azul-marino font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
               <span className="text-gray-400 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
