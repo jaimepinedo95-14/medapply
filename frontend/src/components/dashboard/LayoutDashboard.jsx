@@ -73,10 +73,15 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
             </div>
             <div className="flex flex-col leading-none">
               <div className="flex items-baseline">
-                <span className="text-azul-marino font-bold text-xl">Med</span>
+                <span className="text-white font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
-              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span
+                style={{ color: "white", fontSize: "9px" }}
+                className="leading-tight tracking-wide max-w-[120px] break-words"
+              >
+                CONECTAMOS TALENTO EN SALUD
+              </span>
             </div>
           </Link>
           {/* Botón cerrar en móvil */}
