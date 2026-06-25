@@ -197,6 +197,14 @@ export default function Navbar() {
             </span>
           </Link>
 
+          {/* Registrarse — solo móvil, entre el logo y la hamburguesa */}
+          {!usuario && (
+            <Link to="/registro/candidato"
+              className="md:hidden bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
+              Registrarse
+            </Link>
+          )}
+
           {/* Links centrales — escritorio */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {LINKS_NAV.map((l) => (
@@ -242,12 +250,6 @@ export default function Navbar() {
                     {noLeidas > 9 ? "9+" : noLeidas}
                   </span>
                 )}
-              </Link>
-            )}
-            {!usuario && (
-              <Link to="/registro/candidato"
-                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">
-                Registrarse
               </Link>
             )}
             <button onClick={() => setMenuAbierto((p) => !p)}

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { REGION } from "../../config/region";
+import { supabase } from "../../lib/supabase";
 import { useStats } from "../../hooks/useStats";
+import { formatoCiudadDepartamento } from "../../config/departamentosColombia";
 
 const IconoBuscar = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,9 +19,54 @@ const IconoUbicacion = () => (
 
 export default function Hero() {
   const [busqueda, setBusqueda] = useState("");
-  const [ciudad, setCiudad] = useState("");
+  const [ciudad, setCiudad] = useState("");           // valor real usado para filtrar
+  const [textoCiudad, setTextoCiudad] = useState("");  // lo que se ve en el input
+  const [ciudadesDisponibles, setCiudadesDisponibles] = useState([]);
+  const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false);
   const navigate = useNavigate();
   const stats = useStats();
+  const ciudadBoxRef = useRef(null);
+
+  // Ciudades reales: vienen de las vacantes activas en Supabase, no de una
+  // lista hardcodeada. El departamento se completa con la referencia
+  // geográfica estática (departamentosColombia.js) solo para mostrar.
+  useEffect(() => {
+    supabase
+      .from("ofertas")
+      .select("ciudad")
+      .eq("estado", "activa")
+      .then(({ data }) => {
+        const unicas = [...new Set((data || []).map((o) => o.ciudad).filter(Boolean))];
+        setCiudadesDisponibles(unicas.sort((a, b) => a.localeCompare(b, "es")));
+      });
+  }, []);
+
+  // Cierra las sugerencias al hacer clic afuera
+  useEffect(() => {
+    function onClickFuera(e) {
+      if (ciudadBoxRef.current && !ciudadBoxRef.current.contains(e.target)) {
+        setSugerenciasAbiertas(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickFuera);
+    return () => document.removeEventListener("mousedown", onClickFuera);
+  }, []);
+
+  const sugerencias = textoCiudad.trim().length >= 2
+    ? ciudadesDisponibles.filter((c) => c.toLowerCase().includes(textoCiudad.trim().toLowerCase()))
+    : [];
+
+  const manejarCambioCiudad = (valor) => {
+    setTextoCiudad(valor);
+    setSugerenciasAbiertas(true);
+    if (!valor.trim()) setCiudad(""); // borró el texto → "Todas las ciudades"
+  };
+
+  const seleccionarCiudad = (c) => {
+    setTextoCiudad(c);
+    setCiudad(c);
+    setSugerenciasAbiertas(false);
+  };
 
   const manejarBusqueda = (e) => {
     e.preventDefault();
@@ -79,20 +125,35 @@ export default function Hero() {
 
             <div className="hidden md:block w-px bg-gray-200 my-2" />
 
-            <div className="flex items-center bg-gray-50 rounded-xl px-4 py-3 min-w-[180px]">
+            <div ref={ciudadBoxRef} className="relative flex items-center bg-gray-50 rounded-xl px-4 py-3 min-w-[180px]">
               <span className="text-gray-400 mr-3 flex-shrink-0">
                 <IconoUbicacion />
               </span>
-              <select
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-                className="bg-transparent w-full text-gray-700 outline-none text-sm cursor-pointer"
-              >
-                <option value="">Todas las ciudades</option>
-                {REGION.ciudades.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                value={textoCiudad}
+                onChange={(e) => manejarCambioCiudad(e.target.value)}
+                onFocus={() => setSugerenciasAbiertas(true)}
+                placeholder="Todas las ciudades"
+                autoComplete="off"
+                className="bg-transparent w-full text-gray-700 placeholder-gray-500 outline-none text-sm"
+              />
+
+              {sugerenciasAbiertas && sugerencias.length > 0 && (
+                <ul className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg z-50 text-left">
+                  {sugerencias.map((c) => (
+                    <li key={c}>
+                      <button
+                        type="button"
+                        onClick={() => seleccionarCiudad(c)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        {formatoCiudadDepartamento(c)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <button
