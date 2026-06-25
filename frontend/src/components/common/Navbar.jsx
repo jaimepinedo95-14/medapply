@@ -185,7 +185,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-nav sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 gap-4">
+        <div className="flex items-center h-14 md:h-16 gap-4">
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -197,7 +197,7 @@ export default function Navbar() {
                 <span className="text-azul-marino font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
-              <span className="text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
 
@@ -251,11 +251,11 @@ export default function Navbar() {
             {!usuario && (
               <>
                 <Link to="/login"
-                  className="border border-esmeralda text-esmeralda text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors hover:bg-esmeralda/5">
+                  className="border border-esmeralda text-esmeralda text-xs px-2 py-1 rounded-lg whitespace-nowrap transition-colors hover:bg-esmeralda/5">
                   Iniciar sesión
                 </Link>
                 <Link to="/registro/candidato"
-                  className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
+                  className="bg-esmeralda hover:bg-esmeralda-hover text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap transition-colors">
                   Registrarse
                 </Link>
               </>
