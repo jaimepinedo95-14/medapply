@@ -197,7 +197,7 @@ export default function Navbar() {
                 <span className="text-azul-marino font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
-              <span className="hidden md:block text-gray-400 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
 
