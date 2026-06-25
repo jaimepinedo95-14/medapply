@@ -26,7 +26,7 @@ const VALORES = [
   {
     icono: "🏥",
     titulo: "Especialización",
-    descripcion: "Nos enfocamos exclusivamente en el sector salud de Colombia. No somos una bolsa de empleo genérica — somos su plataforma.",
+    descripcion: "Nos enfocamos exclusivamente en el sector salud de Colombia. No somos una plataforma de empleo genérica — somos su plataforma.",
   },
   {
     icono: "🌎",
@@ -157,7 +157,7 @@ export default function Nosotros() {
             MedApply fue fundada en 2026 por un equipo de profesionales con experiencia en tecnología y en el sector salud colombiano. Vimos de primera mano cómo médicos, enfermeras y auxiliares perdían semanas enviando hojas de vida por correo a instituciones que tardaban meses en responder.
           </p>
           <p className="text-gray-600 leading-relaxed">
-            Decidimos construir la plataforma que ese proceso merecía: moderna, especializada y pensada tanto para quien busca empleo como para quien necesita contratar. Hoy, MedApply es la bolsa de empleo de referencia para el sector salud en Colombia.
+            Decidimos construir la plataforma que ese proceso merecía: moderna, especializada y pensada tanto para quien busca empleo como para quien necesita contratar. Hoy, MedApply es la plataforma de empleo de referencia para el sector salud en Colombia.
           </p>
         </div>
       </section>

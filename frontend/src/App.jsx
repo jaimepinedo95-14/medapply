@@ -6,6 +6,7 @@ import { NotificacionesProvider } from "./context/NotificacionesContext";
 // Layouts
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
+import ScrollToTop from "./components/common/ScrollToTop";
 import LayoutDashboard from "./components/dashboard/LayoutDashboard";
 import BannerVistaEmpresa from "./components/dashboard/BannerVistaEmpresa";
 import LayoutAdmin from "./components/admin/LayoutAdmin";
@@ -116,6 +117,7 @@ function App() {
     <AuthProvider>
       <NotificacionesProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
 
           {/* ── Páginas públicas ── */}

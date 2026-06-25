@@ -11,16 +11,17 @@ export default function Footer() {
 
           {/* Columna 1: Logo y descripción */}
           <div className="sm:col-span-2 md:col-span-1">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-esmeralda rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
-                <span className="text-white font-bold text-lg">+</span>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-black text-xl">M</span>
               </div>
-              <span className="font-bold text-xl">
-                <span className="text-esmeralda-claro">Med</span><span className="text-white">Apply</span>
-              </span>
+              <div className="flex items-baseline">
+                <span className="text-white font-bold text-xl">Med</span>
+                <span className="text-esmeralda-claro font-light text-xl">Apply</span>
+              </div>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              La bolsa de empleo especializada en el sector salud de Colombia.
+              La plataforma de empleo 100% del sector salud.
               Conectamos talento médico con las mejores instituciones del país.
             </p>
             <p className="text-gray-400 text-xs">
@@ -60,7 +61,7 @@ export default function Footer() {
             <h4 className="font-semibold text-lg mb-4">Para empresas</h4>
             <ul className="space-y-2.5 text-gray-300 text-sm">
               <li>
-                <Link to="/para-empresas" className="hover:text-esmeralda-claro transition-colors flex items-center gap-1.5">
+                <Link to="/para-empresas#como-funciona" className="hover:text-esmeralda-claro transition-colors flex items-center gap-1.5">
                   <span className="text-xs">🏥</span> Cómo funciona
                 </Link>
               </li>

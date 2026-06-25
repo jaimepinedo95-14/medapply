@@ -166,12 +166,12 @@ export default function LayoutDashboard({ tipo, children }) {
           >
             {Iconos.menu}
           </button>
-          <div className="flex items-center">
-            <div className="w-6 h-6 bg-esmeralda rounded-md flex items-center justify-center mr-1.5">
-              <span className="text-white font-bold text-xs">+</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-7 h-7 bg-esmeralda rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-black text-sm">M</span>
             </div>
             <span className="font-bold text-base">
-              <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
+              <span className="text-azul-marino">Med</span><span className="text-esmeralda-claro font-light">Apply</span>
             </span>
           </div>
         </header>

@@ -35,12 +35,12 @@ function SidebarAdmin({ menuAbierto, cerrarMenu }) {
         {/* Logo + rol */}
         <div className="px-5 py-5 border-b border-gray-700 flex items-center justify-between">
           <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-esmeralda rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">+</span>
+            <div className="w-9 h-9 bg-esmeralda rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-black text-base">M</span>
             </div>
             <div>
               <span className="font-bold text-base">
-                <span className="text-esmeralda-claro">Med</span><span className="text-white">Apply</span>
+                <span className="text-white">Med</span><span className="text-esmeralda-claro font-light">Apply</span>
               </span>
               <span className={`block text-xs leading-none font-semibold ${etiqueta.color}`}>
                 {etiqueta.texto}

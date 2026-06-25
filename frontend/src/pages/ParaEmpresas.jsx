@@ -102,7 +102,7 @@ export default function ParaEmpresas() {
               La plataforma del sector salud
             </span>
             <h1 className="text-3xl md:text-5xl font-black leading-tight mb-5">
-              La única bolsa de empleo<br />
+              La única plataforma de empleo<br />
               <span className="text-esmeralda-claro">100% del sector salud</span><br />
               en Colombia
             </h1>
@@ -170,7 +170,7 @@ export default function ParaEmpresas() {
       </section>
 
       {/* ── CÓMO FUNCIONA ── */}
-      <section className="py-14 px-4">
+      <section id="como-funciona" className="py-14 px-4 scroll-mt-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-azul-marino">Cómo funciona MedApply para empresas</h2>

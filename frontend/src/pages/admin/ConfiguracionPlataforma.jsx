@@ -35,7 +35,7 @@ export default function ConfiguracionPlataforma() {
     emailPagos: "pagos@medapply.co",
     emailLegal: "legal@medapply.co",
     sitioWeb: "www.medapply.co",
-    descripcion: "La única bolsa de empleo 100% del sector salud en Colombia.",
+    descripcion: "La única plataforma de empleo 100% del sector salud en Colombia.",
   });
 
   // Planes
