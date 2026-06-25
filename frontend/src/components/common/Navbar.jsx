@@ -188,8 +188,17 @@ export default function Navbar() {
         <div className="flex items-center h-16 gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
-            <img src="/logo-medapply.svg" alt="MedApply" height="48" />
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-black text-xl">M</span>
+            </div>
+            <div className="flex flex-col leading-none">
+              <div className="flex items-baseline">
+                <span className="text-white font-bold text-xl">Med</span>
+                <span className="text-esmeralda-claro font-light text-xl">Apply</span>
+              </div>
+              <span className="text-gray-400 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+            </div>
           </Link>
 
           {/* Iniciar sesión + Registrarse — solo móvil, entre el logo y la hamburguesa */}
