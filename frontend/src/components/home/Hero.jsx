@@ -1,8 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
 import { useStats } from "../../hooks/useStats";
-import { formatoCiudadDepartamento } from "../../config/departamentosColombia";
+import { DEPARTAMENTO_POR_MUNICIPIO, formatoCiudadDepartamento } from "../../config/departamentosColombia";
+
+// Lista de referencia geográfica DANE — no datos de Supabase
+const TODAS_LAS_CIUDADES = Object.keys(DEPARTAMENTO_POR_MUNICIPIO).sort((a, b) => a.localeCompare(b, "es"));
+
+const CIUDADES_POPULARES = [
+  "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Bucaramanga",
+].filter((c) => TODAS_LAS_CIUDADES.includes(c));
 
 const IconoBuscar = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,27 +25,12 @@ const IconoUbicacion = () => (
 
 export default function Hero() {
   const [busqueda, setBusqueda] = useState("");
-  const [ciudad, setCiudad] = useState("");           // valor real usado para filtrar
-  const [textoCiudad, setTextoCiudad] = useState("");  // lo que se ve en el input
-  const [ciudadesDisponibles, setCiudadesDisponibles] = useState([]);
+  const [ciudad, setCiudad] = useState("");           // valor real usado para filtrar (solo nombre de ciudad)
+  const [textoCiudad, setTextoCiudad] = useState("");  // lo que se ve en el input ("Ciudad, Departamento")
   const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false);
   const navigate = useNavigate();
   const stats = useStats();
   const ciudadBoxRef = useRef(null);
-
-  // Ciudades reales: vienen de las vacantes activas en Supabase, no de una
-  // lista hardcodeada. El departamento se completa con la referencia
-  // geográfica estática (departamentosColombia.js) solo para mostrar.
-  useEffect(() => {
-    supabase
-      .from("ofertas")
-      .select("ciudad")
-      .eq("estado", "activa")
-      .then(({ data }) => {
-        const unicas = [...new Set((data || []).map((o) => o.ciudad).filter(Boolean))];
-        setCiudadesDisponibles(unicas.sort((a, b) => a.localeCompare(b, "es")));
-      });
-  }, []);
 
   // Cierra las sugerencias al hacer clic afuera
   useEffect(() => {
@@ -52,9 +43,15 @@ export default function Hero() {
     return () => document.removeEventListener("mousedown", onClickFuera);
   }, []);
 
-  const sugerencias = textoCiudad.trim().length >= 2
-    ? ciudadesDisponibles.filter((c) => c.toLowerCase().includes(textoCiudad.trim().toLowerCase()))
-    : [];
+  // Si no hay texto: ciudades populares. Si hay 2+ letras: filtra la lista
+  // DANE completa por el nombre de ciudad (ignora lo que esté tras la coma,
+  // ej. al editar un valor ya seleccionado como "Cali, Valle del Cauca").
+  const sugerencias = useMemo(() => {
+    const texto = textoCiudad.split(",")[0].trim().toLowerCase();
+    if (!texto) return CIUDADES_POPULARES;
+    if (texto.length < 2) return [];
+    return TODAS_LAS_CIUDADES.filter((c) => c.toLowerCase().includes(texto)).slice(0, 8);
+  }, [textoCiudad]);
 
   const manejarCambioCiudad = (valor) => {
     setTextoCiudad(valor);
@@ -63,8 +60,20 @@ export default function Hero() {
   };
 
   const seleccionarCiudad = (c) => {
-    setTextoCiudad(c);
-    setCiudad(c);
+    setTextoCiudad(formatoCiudadDepartamento(c)); // muestra "Ciudad, Departamento"
+    setCiudad(c);                                  // el filtro real usa solo el nombre de la ciudad
+    setSugerenciasAbiertas(false);
+  };
+
+  const seleccionarTodas = () => {
+    setTextoCiudad("");
+    setCiudad("");
+    setSugerenciasAbiertas(false);
+  };
+
+  const limpiarCiudad = () => {
+    setTextoCiudad("");
+    setCiudad("");
     setSugerenciasAbiertas(false);
   };
 
@@ -138,9 +147,37 @@ export default function Hero() {
                 autoComplete="off"
                 className="bg-transparent w-full text-gray-700 placeholder-gray-500 outline-none text-sm"
               />
+              {textoCiudad && (
+                <button
+                  type="button"
+                  onClick={limpiarCiudad}
+                  aria-label="Borrar ciudad"
+                  className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0 text-lg leading-none"
+                >
+                  ×
+                </button>
+              )}
 
-              {sugerenciasAbiertas && sugerencias.length > 0 && (
-                <ul className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg z-50 text-left">
+              {sugerenciasAbiertas && (sugerencias.length > 0 || !textoCiudad.trim()) && (
+                <ul className="absolute left-0 top-full mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg z-50 text-left">
+                  {!textoCiudad.trim() && (
+                    <>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={seleccionarTodas}
+                          className="w-full text-left px-4 py-2 text-sm font-medium text-azul-marino hover:bg-gray-50"
+                        >
+                          Todas las ciudades
+                        </button>
+                      </li>
+                      {sugerencias.length > 0 && (
+                        <li className="px-4 pt-2 pb-1 text-xs text-gray-400 font-semibold uppercase tracking-wide">
+                          Ciudades populares
+                        </li>
+                      )}
+                    </>
+                  )}
                   {sugerencias.map((c) => (
                     <li key={c}>
                       <button
