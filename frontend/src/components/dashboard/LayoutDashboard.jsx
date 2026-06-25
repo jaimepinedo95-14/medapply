@@ -67,13 +67,17 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
       >
         {/* Logo en el sidebar */}
         <div className="px-5 py-5 border-b border-blue-800 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
-            <div className="w-7 h-7 bg-esmeralda rounded-lg flex items-center justify-center mr-2">
-              <span className="text-white font-bold">+</span>
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-black text-xl">M</span>
             </div>
-            <span className="font-bold text-lg">
-              <span className="text-esmeralda-claro">Med</span><span className="text-white">Apply</span>
-            </span>
+            <div className="flex flex-col leading-none">
+              <div className="flex items-baseline">
+                <span className="text-azul-marino font-bold text-xl">Med</span>
+                <span className="text-esmeralda-claro font-light text-xl">Apply</span>
+              </div>
+              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+            </div>
           </Link>
           {/* Botón cerrar en móvil */}
           <button onClick={cerrarMenu} className="md:hidden text-gray-400 hover:text-white">
