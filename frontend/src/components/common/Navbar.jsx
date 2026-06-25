@@ -197,23 +197,9 @@ export default function Navbar() {
                 <span className="text-azul-marino font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>
               </div>
-              <span className="text-gray-400 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span className="hidden md:block text-gray-400 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
-
-          {/* Iniciar sesión + Registrarse — solo móvil, entre el logo y la hamburguesa */}
-          {!usuario && (
-            <div className="md:hidden flex items-center gap-1.5">
-              <Link to="/login"
-                className="border border-esmeralda text-esmeralda text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors hover:bg-esmeralda/5">
-                Iniciar sesión
-              </Link>
-              <Link to="/registro/candidato"
-                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
-                Registrarse
-              </Link>
-            </div>
-          )}
 
           {/* Links centrales — escritorio */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
