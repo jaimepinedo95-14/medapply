@@ -197,12 +197,18 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Registrarse — solo móvil, entre el logo y la hamburguesa */}
+          {/* Iniciar sesión + Registrarse — solo móvil, entre el logo y la hamburguesa */}
           {!usuario && (
-            <Link to="/registro/candidato"
-              className="md:hidden bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
-              Registrarse
-            </Link>
+            <div className="md:hidden flex items-center gap-1.5">
+              <Link to="/login"
+                className="border border-esmeralda text-esmeralda text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors hover:bg-esmeralda/5">
+                Iniciar sesión
+              </Link>
+              <Link to="/registro/candidato"
+                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap transition-colors">
+                Registrarse
+              </Link>
+            </div>
           )}
 
           {/* Links centrales — escritorio */}
