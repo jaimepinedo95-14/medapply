@@ -14,7 +14,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const REMITENTE = "MedApply <onboarding@resend.dev>";
+const REMITENTE = "MedApply <notificaciones@medapply.co>";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
