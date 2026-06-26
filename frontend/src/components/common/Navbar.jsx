@@ -200,7 +200,7 @@ export default function Navbar() {
                 <span className="font-bold text-xl" style={{color: '#1E3A5F'}}>Med</span>
                 <span className="font-light text-xl" style={{color: '#10b981'}}>Apply</span>
               </div>
-              <span className="text-xs tracking-widest" style={{color: '#64748B', fontSize: '8px'}}>CONECTAMOS TALENTO EN SALUD</span>
+              <span className="text-xs tracking-widest" style={{color: '#111827', fontSize: '8px'}}>CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
 

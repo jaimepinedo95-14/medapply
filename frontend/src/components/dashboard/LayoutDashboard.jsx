@@ -81,7 +81,7 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
                 <span className="font-light text-xl" style={{ color: "#10b981" }}>Apply</span>
               </div>
               <span
-                style={{ color: "#94A3B8", fontSize: "9px" }}
+                style={{ color: "#FFFFFF", fontSize: "9px" }}
                 className="leading-tight tracking-wide max-w-[120px] break-words"
               >
                 CONECTAMOS TALENTO EN SALUD
