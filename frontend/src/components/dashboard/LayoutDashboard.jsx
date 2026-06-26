@@ -68,16 +68,19 @@ function Sidebar({ tipo, menuAbierto, cerrarMenu }) {
         {/* Logo en el sidebar */}
         <div className="px-5 py-5 border-b border-blue-800 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-xl">M</span>
-            </div>
+            <svg width="40" height="40" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+              <rect x="2" y="2" width="92" height="92" rx="20" fill="#1E3A5F"/>
+              <rect x="38" y="14" width="20" height="60" rx="6" fill="white"/>
+              <rect x="18" y="34" width="60" height="20" rx="6" fill="white"/>
+              <polygon points="66,58 66,88 76,78 82,92 88,89 82,75 93,75" fill="#10b981"/>
+            </svg>
             <div className="flex flex-col leading-none">
               <div className="flex items-baseline">
                 <span className="text-white font-bold text-xl">Med</span>
-                <span className="text-esmeralda-claro font-light text-xl">Apply</span>
+                <span className="font-light text-xl" style={{ color: "#10b981" }}>Apply</span>
               </div>
               <span
-                style={{ color: "white", fontSize: "9px" }}
+                style={{ color: "#94A3B8", fontSize: "9px" }}
                 className="leading-tight tracking-wide max-w-[120px] break-words"
               >
                 CONECTAMOS TALENTO EN SALUD

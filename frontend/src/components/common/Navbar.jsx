@@ -188,16 +188,19 @@ export default function Navbar() {
         <div className="flex items-center h-14 md:h-16 gap-4">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-xl">M</span>
-            </div>
+          <Link to="/" className="flex items-center gap-3">
+            <svg width="48" height="48" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="92" height="92" rx="20" fill="#1E3A5F"/>
+              <rect x="38" y="14" width="20" height="60" rx="6" fill="white"/>
+              <rect x="18" y="34" width="60" height="20" rx="6" fill="white"/>
+              <polygon points="66,58 66,88 76,78 82,92 88,89 82,75 93,75" fill="#10b981"/>
+            </svg>
             <div className="flex flex-col leading-none">
-              <div className="flex items-baseline">
-                <span className="text-azul-marino font-bold text-xl">Med</span>
-                <span className="text-esmeralda-claro font-light text-xl">Apply</span>
+              <div className="flex items-baseline gap-0">
+                <span className="font-bold text-xl" style={{color: '#1E3A5F'}}>Med</span>
+                <span className="font-light text-xl" style={{color: '#10b981'}}>Apply</span>
               </div>
-              <span className="hidden md:block text-gray-900 text-xs tracking-widest">CONECTAMOS TALENTO EN SALUD</span>
+              <span className="text-xs tracking-widest" style={{color: '#64748B', fontSize: '8px'}}>CONECTAMOS TALENTO EN SALUD</span>
             </div>
           </Link>
 
