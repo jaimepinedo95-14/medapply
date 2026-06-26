@@ -1,73 +1,43 @@
-// Página de precios — valores vienen del config regional
+// Página de precios — los 4 planes de empresa vienen de config/planesEmpresa.js
+// (misma fuente que usa el panel de empresa en /empresa/plan), para que los
+// precios nunca queden desincronizados entre la web pública y el panel.
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { REGION, formatNumero } from "../config/region";
+import { PLANES_INFO, VACANTE_UNICA, formatPrecioPlan } from "../config/planesEmpresa";
 
-const PLANES_EMPRESA = [
-  {
-    nombre: "Gratuito",
-    precio: 0,
-    descripcion: "Para empezar a contratar profesionales de la salud.",
-    color: "border-gray-200",
-    badge: null,
-    caracteristicas: [
-      { texto: "1 oferta activa al mes", incluido: true },
-      { texto: "Ver candidatos postulados", incluido: true },
-      { texto: "Panel básico de gestión", incluido: true },
-      { texto: "Perfil de empresa público", incluido: true },
-      { texto: "Hasta 5 postulaciones por oferta", incluido: true },
-      { texto: "Banco de hojas de vida", incluido: false },
-      { texto: "Contactar candidatos directamente", incluido: false },
-      { texto: "Soporte prioritario", incluido: false },
-      { texto: "Estadísticas avanzadas", incluido: false },
-    ],
-    cta: "Registrarme gratis",
-    ctaHref: "/registro/empresa",
-    ctaStyle: "btn-outline",
-  },
-  {
-    nombre: "Básico",
-    precio: REGION.planes.empresa.basico,
-    descripcion: "Para instituciones que buscan contratar con mayor frecuencia.",
-    color: "border-blue-200",
-    badge: null,
-    caracteristicas: [
-      { texto: "Hasta 5 ofertas activas", incluido: true },
-      { texto: "Ver candidatos postulados", incluido: true },
-      { texto: "Panel completo de gestión", incluido: true },
-      { texto: "Perfil de empresa público", incluido: true },
-      { texto: "Postulaciones ilimitadas por oferta", incluido: true },
-      { texto: "Soporte por correo electrónico", incluido: true },
-      { texto: "Estadísticas básicas", incluido: true },
-      { texto: "Banco de hojas de vida", incluido: false },
-      { texto: "Contactar candidatos directamente", incluido: false },
-    ],
-    cta: "Elegir Básico",
-    ctaHref: "/registro/empresa",
-    ctaStyle: "bg-azul-marino text-white rounded-xl px-6 py-3 font-semibold hover:bg-azul-claro transition-colors text-center block",
-  },
-  {
-    nombre: "Premium",
-    precio: REGION.planes.empresa.premium,
-    descripcion: "Para hospitales y clínicas con alta rotación de personal.",
-    color: "border-esmeralda ring-2 ring-esmeralda",
-    badge: "Más popular",
-    caracteristicas: [
-      { texto: "Ofertas ilimitadas", incluido: true },
-      { texto: "Ver candidatos postulados", incluido: true },
-      { texto: "Panel completo + analítica avanzada", incluido: true },
-      { texto: "Perfil de empresa público destacado", incluido: true },
-      { texto: "Postulaciones ilimitadas por oferta", incluido: true },
-      { texto: "Banco completo de hojas de vida", incluido: true },
-      { texto: "Contactar candidatos directamente", incluido: true },
-      { texto: "Soporte prioritario (respuesta < 4h)", incluido: true },
-      { texto: "Candidatos destacados primero", incluido: true },
-    ],
-    cta: "Elegir Premium",
-    ctaHref: "/registro/empresa",
-    ctaStyle: "bg-esmeralda text-white rounded-xl px-6 py-3 font-semibold hover:bg-esmeralda-hover transition-colors text-center block",
-  },
-];
+const DESCRIPCION_POR_PLAN = {
+  gratuito: "Prueba la plataforma publicando tu primera vacante sin costo.",
+  basico:   "Para instituciones que contratan con frecuencia moderada.",
+  estandar: "Para instituciones con varias vacantes abiertas a la vez.",
+  premium:  "Para hospitales y clínicas con alta rotación de personal.",
+};
+
+const COLOR_POR_PLAN = {
+  gratuito: "border-gray-200",
+  basico:   "border-blue-200",
+  estandar: "border-azul-marino/40",
+  premium:  "border-esmeralda ring-2 ring-esmeralda",
+};
+
+const ESTILO_CTA_POR_PLAN = {
+  gratuito: "btn-outline",
+  basico:   "bg-azul-marino text-white rounded-xl px-6 py-3 font-semibold hover:bg-azul-claro transition-colors text-center block",
+  estandar: "bg-azul-marino text-white rounded-xl px-6 py-3 font-semibold hover:bg-azul-claro transition-colors text-center block",
+  premium:  "bg-esmeralda text-white rounded-xl px-6 py-3 font-semibold hover:bg-esmeralda-hover transition-colors text-center block",
+};
+
+const PLANES_EMPRESA = PLANES_INFO.map((p) => ({
+  nombre: p.nombre,
+  precio: p.precio,
+  descripcion: DESCRIPCION_POR_PLAN[p.key],
+  color: COLOR_POR_PLAN[p.key],
+  badge: p.badge || null,
+  caracteristicas: p.features.map((texto) => ({ texto, incluido: true })),
+  cta: p.precio === 0 ? "Registrarme gratis" : `Elegir ${p.nombre}`,
+  ctaHref: "/registro/empresa",
+  ctaStyle: ESTILO_CTA_POR_PLAN[p.key],
+}));
 
 const PLANES_CANDIDATO = [
   {
@@ -220,11 +190,23 @@ export default function Precios() {
       <section className="py-10 px-4">
         <div className="max-w-5xl mx-auto">
           {seccion === "empresas" ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {planesActuales.map((plan) => (
-                <TarjetaPlan key={plan.nombre} plan={plan} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                {planesActuales.map((plan) => (
+                  <TarjetaPlan key={plan.nombre} plan={plan} />
+                ))}
+              </div>
+              <div className="mt-6 max-w-md mx-auto bg-white border border-dashed border-esmeralda rounded-2xl p-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-azul-marino text-sm">{VACANTE_UNICA.nombre}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{VACANTE_UNICA.descripcion}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">No cambia tu plan, solo suma 1 vacante.</p>
+                </div>
+                <p className="text-esmeralda font-bold text-lg whitespace-nowrap">
+                  {formatPrecioPlan(VACANTE_UNICA.precio)}
+                </p>
+              </div>
+            </>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               {planesActuales.map((plan) => (
@@ -259,7 +241,7 @@ export default function Precios() {
       {/* Comparativa rápida */}
       {seccion === "empresas" && (
         <section className="py-12 px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-azul-marino text-center mb-8">Comparativa de planes</h2>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
@@ -267,24 +249,26 @@ export default function Precios() {
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
                       <th className="px-5 py-4 text-left font-semibold text-azul-marino">Característica</th>
-                      <th className="px-4 py-4 text-center font-semibold text-gray-500">Gratuito</th>
+                      <th className="px-4 py-4 text-center font-semibold text-gray-500">Gratis</th>
                       <th className="px-4 py-4 text-center font-semibold text-azul-marino">Básico</th>
+                      <th className="px-4 py-4 text-center font-semibold text-azul-marino">Estándar</th>
                       <th className="px-4 py-4 text-center font-semibold text-esmeralda">Premium</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {[
-                      ["Ofertas activas", "1", "5", "Ilimitadas"],
-                      ["Ver postulantes", "✓", "✓", "✓"],
-                      ["Banco de hojas de vida", "–", "–", "✓"],
-                      ["Contactar candidatos", "–", "–", "✓"],
-                      ["Soporte", "–", "Correo", "Prioritario < 4h"],
-                      ["Precio/mes", "Gratis", "$79.900", "$159.900"],
-                    ].map(([label, gratuito, basico, premium]) => (
+                      ["Vacantes activas", "1 (única vez)", "3", "8", "Ilimitadas"],
+                      ["Ver postulantes", "Solo nombre", "✓", "✓", "✓"],
+                      ["Banco de hojas de vida", "–", "✓", "✓", "✓"],
+                      ["Contactar candidatos", "–", "–", "✓", "✓"],
+                      ["Match con IA", "–", "–", "–", "✓"],
+                      ["Precio/mes", "Gratis", "$89.900", "$189.900", "$299.900"],
+                    ].map(([label, gratuito, basico, estandar, premium]) => (
                       <tr key={label} className="hover:bg-gray-50">
                         <td className="px-5 py-3 font-medium text-gray-700">{label}</td>
                         <td className="px-4 py-3 text-center text-gray-400">{gratuito}</td>
                         <td className="px-4 py-3 text-center text-azul-marino">{basico}</td>
+                        <td className="px-4 py-3 text-center text-azul-marino">{estandar}</td>
                         <td className="px-4 py-3 text-center text-esmeralda font-semibold">{premium}</td>
                       </tr>
                     ))}

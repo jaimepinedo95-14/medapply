@@ -47,8 +47,10 @@ export const REGION_CO = {
     },
     empresa: {
       gratuito: 0,
-      basico: 79_900,
-      premium: 159_900,
+      vacanteUnica: 49_900,
+      basico: 89_900,
+      estandar: 189_900,
+      premium: 299_900,
     },
   },
 

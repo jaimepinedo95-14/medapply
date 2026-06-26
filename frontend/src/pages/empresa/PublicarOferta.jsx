@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { InputCampo, SelectCampo } from "../../components/common/InputCampo";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { puedeCrearVacante } from "../../config/planesEmpresa";
+import ModalLimiteVacantes from "../../components/dashboard/ModalLimiteVacantes";
 
 const CIUDADES = ["Bogotá","Medellín","Cali","Barranquilla","Cartagena","Bucaramanga","Pereira","Manizales","Santa Marta","Cúcuta","Ibagué","Pasto","Neiva","Montería","Armenia","Otra"];
 const CATEGORIAS = ["Médico general","Médico especialista","Enfermero/a","Auxiliar de enfermería","Conductor de ambulancia","Camillero","Ingeniero biomédico","Personal administrativo","Odontólogo/a","Bacteriólogo/a","Fisioterapeuta","Psicólogo/a","Farmacéutico/a","Tecnólogo en radiología","Oficios varios","Otro"];
@@ -36,6 +38,24 @@ export default function PublicarOferta() {
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState("");
   const [publicando, setPublicando] = useState(false);
+  const [plan, setPlan] = useState("gratuito");
+  const [historialVacantes, setHistorialVacantes] = useState({ totalHistorico: 0, activasActuales: 0 });
+  const [mostrarModalLimite, setMostrarModalLimite] = useState(false);
+
+  useEffect(() => {
+    if (!usuario?.id) return;
+    Promise.all([
+      supabase.from("perfiles_empresa").select("plan").eq("usuario_id", usuario.id).maybeSingle(),
+      supabase.from("ofertas").select("id, estado").eq("empresa_id", usuario.id),
+    ]).then(([{ data: perfilEmpresa }, { data: ofertas }]) => {
+      setPlan(perfilEmpresa?.plan || "gratuito");
+      const lista = ofertas || [];
+      setHistorialVacantes({
+        totalHistorico:  lista.length,
+        activasActuales: lista.filter((o) => o.estado === "activa").length,
+      });
+    });
+  }, [usuario?.id]);
 
   // Fecha mínima para el datepicker: mañana
   const manana = new Date();
@@ -53,6 +73,10 @@ export default function PublicarOferta() {
     const err = validar(datos);
     if (Object.keys(err).length) { setErrores(err); return; }
     if (!usuario?.id) { setErrorGeneral("Debes iniciar sesión para publicar."); return; }
+    if (!puedeCrearVacante(plan, historialVacantes)) {
+      setMostrarModalLimite(true);
+      return;
+    }
 
     setPublicando(true);
     setErrorGeneral("");
@@ -271,6 +295,10 @@ export default function PublicarOferta() {
           </div>
         </div>
       </form>
+
+      {mostrarModalLimite && (
+        <ModalLimiteVacantes plan={plan} onCerrar={() => setMostrarModalLimite(false)} />
+      )}
     </div>
   );
 }

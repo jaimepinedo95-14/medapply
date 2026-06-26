@@ -41,36 +41,52 @@ const TESTIMONIOS = [
 
 const PLANES = [
   {
-    nombre: "Gratuito",
+    nombre: "Gratis",
     precio: 0,
     color: "border-gray-200",
-    badge: null,
-    items: ["1 oferta activa al mes", "Ver candidatos postulados", "Panel básico de gestión", "Perfil de empresa público"],
+    badge: "Solo primera vez",
+    items: ["1 vacante activa — solo la primera vez", "Solo ver nombre de candidatos", "Panel básico de gestión", "Perfil de empresa público"],
     cta: "Empezar gratis",
     href: "/registro/empresa",
     ctaStyle: "btn-outline w-full text-center py-2.5",
   },
   {
     nombre: "Básico",
-    precio: 79900,
+    precio: 89900,
     color: "border-azul-claro/40",
     badge: null,
-    items: ["Hasta 5 ofertas activas", "Ver candidatos postulados", "Soporte por correo", "Estadísticas básicas"],
+    items: ["3 vacantes activas", "Ver hojas de vida completas", "Soporte por correo", "Estadísticas básicas"],
     cta: "Elegir Básico",
     href: "/registro/empresa",
     ctaStyle: "bg-azul-marino text-white rounded-xl py-2.5 w-full text-center font-semibold hover:bg-azul-claro transition-colors block",
   },
   {
+    nombre: "Estándar",
+    precio: 189900,
+    color: "border-azul-marino/40",
+    badge: null,
+    items: ["8 vacantes activas", "Ver hojas de vida completas", "Contactar candidatos directamente", "Estadísticas básicas"],
+    cta: "Elegir Estándar",
+    href: "/registro/empresa",
+    ctaStyle: "bg-azul-marino text-white rounded-xl py-2.5 w-full text-center font-semibold hover:bg-azul-claro transition-colors block",
+  },
+  {
     nombre: "Premium",
-    precio: 159900,
+    precio: 299900,
     color: "border-esmeralda ring-2 ring-esmeralda",
     badge: "Más popular",
-    items: ["Ofertas ilimitadas", "Banco completo de candidatos", "Contactar candidatos directamente", "Candidatos destacados primero", "Soporte prioritario < 4h", "Estadísticas avanzadas"],
+    items: ["Vacantes ilimitadas", "Banco completo de candidatos", "Contactar candidatos directamente", "Match con IA", "Candidatos destacados primero", "Estadísticas avanzadas"],
     cta: "Elegir Premium",
     href: "/registro/empresa",
     ctaStyle: "bg-esmeralda text-white rounded-xl py-2.5 w-full text-center font-semibold hover:bg-esmeralda-hover transition-colors block",
   },
 ];
+
+const VACANTE_UNICA_INFO = {
+  nombre: "Vacante única",
+  precio: 49900,
+  descripcion: "Para empresas que ya usaron su vacante gratis y solo necesitan publicar una más, sin cambiar de plan.",
+};
 
 export default function ParaEmpresas() {
   const stats = useStats();
@@ -211,12 +227,12 @@ export default function ParaEmpresas() {
 
       {/* ── PLANES ── */}
       <section className="py-14 px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-azul-marino">Planes transparentes, sin contratos</h2>
             <p className="text-gray-500 mt-2">Cancela cuando quieras. Sin permanencia mínima.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             {PLANES.map((plan) => (
               <div key={plan.nombre} className={`bg-white rounded-3xl border-2 ${plan.color} p-6 flex flex-col relative`}>
                 {plan.badge && (
@@ -243,6 +259,17 @@ export default function ParaEmpresas() {
               </div>
             ))}
           </div>
+
+          <div className="mt-6 max-w-md mx-auto bg-white border border-dashed border-esmeralda rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-bold text-azul-marino text-sm">{VACANTE_UNICA_INFO.nombre}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{VACANTE_UNICA_INFO.descripcion}</p>
+            </div>
+            <p className="text-esmeralda font-bold text-lg whitespace-nowrap">
+              ${VACANTE_UNICA_INFO.precio.toLocaleString("es-CO")}
+            </p>
+          </div>
+
           <p className="text-center text-sm text-gray-400 mt-5">
             ¿Necesitas un plan personalizado?{" "}
             <a href="#demo" className="text-azul-marino font-semibold hover:underline">Contáctanos</a>

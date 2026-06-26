@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
-import { LIMITE_VACANTES, LABEL_PLAN } from "../../config/planesEmpresa";
+import { LIMITE_VACANTES } from "../../config/planesEmpresa";
+import ModalLimiteVacantes from "../../components/dashboard/ModalLimiteVacantes";
 
 const DIAS_VIGENCIA = 30;
 
@@ -38,6 +39,7 @@ export default function MisOfertas() {
   const [toast, setToast]       = useState("");
   const [retiroPendiente, setRetiroPendiente] = useState(null);
   const [renovando, setRenovando] = useState(null);
+  const [mostrarModalLimite, setMostrarModalLimite] = useState(false);
 
   useEffect(() => {
     if (usuario?.id) cargar();
@@ -107,7 +109,7 @@ export default function MisOfertas() {
     const limite = LIMITE_VACANTES[plan] ?? 1;
     const activasActuales = ofertas.filter((o) => o.estado === "activa").length;
     if (Number.isFinite(limite) && activasActuales >= limite) {
-      mostrarToast(`❌ Ya tienes ${activasActuales}/${limite} vacantes activas en tu plan ${LABEL_PLAN[plan]}. Cierra una o mejora tu plan para renovar.`);
+      setMostrarModalLimite(true);
       return;
     }
 
@@ -292,6 +294,10 @@ export default function MisOfertas() {
         <div className="fixed bottom-6 right-6 bg-azul-marino text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold z-50 max-w-sm">
           {toast}
         </div>
+      )}
+
+      {mostrarModalLimite && (
+        <ModalLimiteVacantes plan={plan} onCerrar={() => setMostrarModalLimite(false)} />
       )}
     </div>
   );

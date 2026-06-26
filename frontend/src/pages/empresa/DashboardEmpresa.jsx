@@ -160,7 +160,7 @@ export default function DashboardEmpresa() {
               Estás en el límite de tu plan {LABEL_PLAN[stats.plan]} ({stats.vacantesActivas}/{limite} vacantes activas)
             </p>
             <p className="text-yellow-700 text-xs mt-0.5">
-              Mejora tu plan para publicar más vacantes y desbloquear más beneficios.{" "}
+              Compra una vacante única ($49.900) o mejora tu plan para publicar más y desbloquear más beneficios.{" "}
               <Link to="/empresa/plan" className="font-bold underline">Ver planes →</Link>
             </p>
           </div>

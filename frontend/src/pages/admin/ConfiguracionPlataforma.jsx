@@ -109,10 +109,10 @@ export default function ConfiguracionPlataforma() {
             ayuda="Actualmente: $9.900 COP" />
           <CampoConfig label="Empresa Básico (COP/mes)" value={planes.empresaBasico}
             onChange={cambiarPlan("empresaBasico")} tipo="number"
-            ayuda="Actualmente: $79.900 COP" />
+            ayuda="Actualmente: $89.900 COP" />
           <CampoConfig label="Empresa Premium (COP/mes)" value={planes.empresaPremium}
             onChange={cambiarPlan("empresaPremium")} tipo="number"
-            ayuda="Actualmente: $159.900 COP" />
+            ayuda="Actualmente: $299.900 COP" />
         </div>
       </SeccionConfig>
 

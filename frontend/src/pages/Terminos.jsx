@@ -134,9 +134,11 @@ export default function Terminos() {
               </ul>
               <p className="font-semibold text-azul-marino mb-2 mt-3">Para empresas:</p>
               <ul className="space-y-1 text-sm">
-                <li>• <strong>Gratuito:</strong> $0 COP/mes</li>
-                <li>• <strong>Básico:</strong> $79.900 COP/mes</li>
-                <li>• <strong>Premium:</strong> $159.900 COP/mes</li>
+                <li>• <strong>Gratis:</strong> $0 — 1 vacante, solo la primera vez</li>
+                <li>• <strong>Vacante única:</strong> $49.900 (pago único, no recurrente)</li>
+                <li>• <strong>Básico:</strong> $89.900 COP/mes — 3 vacantes</li>
+                <li>• <strong>Estándar:</strong> $189.900 COP/mes — 8 vacantes</li>
+                <li>• <strong>Premium:</strong> $299.900 COP/mes — vacantes ilimitadas</li>
               </ul>
             </div>
             <p>Los cobros son mensuales y se realizan mediante PSE o tarjeta débito/crédito a través de pasarela de pago segura. El usuario puede cancelar su suscripción en cualquier momento; el plan se mantendrá activo hasta el final del período pagado.</p>

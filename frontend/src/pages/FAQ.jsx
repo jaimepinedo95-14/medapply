@@ -51,7 +51,7 @@ const PREGUNTAS_EMPRESAS = [
   },
   {
     q: "¿Cuáles son los planes disponibles para empresas?",
-    a: "Tenemos tres planes: Gratuito (1 oferta activa/mes, sin costo), Básico ($79.900 COP/mes, hasta 5 ofertas + soporte por correo), y Premium ($159.900 COP/mes, ofertas ilimitadas + banco completo de candidatos + contacto directo + soporte prioritario). Todos los precios incluyen IVA.",
+    a: "Tenemos cuatro planes: Gratis ($0, 1 vacante activa pero solo la primera vez), Básico ($89.900 COP/mes, 3 vacantes + hojas de vida completas), Estándar ($189.900 COP/mes, 8 vacantes + contactar candidatos) y Premium ($299.900 COP/mes, vacantes ilimitadas + match con IA). Si ya usaste tu vacante gratis y solo necesitas publicar una más, puedes comprar una Vacante única por $49.900 sin cambiar de plan. Todos los precios incluyen IVA.",
   },
   {
     q: "¿Cómo publico una oferta de empleo?",

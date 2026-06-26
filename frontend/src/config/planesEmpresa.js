@@ -1,7 +1,12 @@
-// Configuración de los 4 niveles de plan para empresas en MedApply.
-// El valor real de cada empresa vive en perfiles_empresa.plan (Supabase).
-// Este archivo solo define los límites y features de cada nivel — no es data mock,
-// es configuración de producto (igual patrón que REGION_CO.planes en config/region.js).
+// Configuración de los planes para empresas en MedApply.
+// El valor real de cada empresa vive en perfiles_empresa.plan (Supabase),
+// con valores 'gratuito' | 'basico' | 'estandar' | 'premium'.
+// "Vacante única" NO es un plan (no se guarda en perfiles_empresa.plan) —
+// es una compra de un solo uso para sumar +1 vacante sin cambiar de plan.
+// Este archivo solo define límites y precios — no es data mock, es
+// configuración de producto (igual patrón que REGION_CO.planes en config/region.js).
+// Los pagos (Wompi) todavía no están activos: todo lo de aquí es solo
+// texto/valores/lógica visual hasta que se integre el cobro real.
 
 export const LABEL_PLAN = {
   gratuito: "Gratis",
@@ -12,12 +17,24 @@ export const LABEL_PLAN = {
 
 export const ORDEN_PLAN = ["gratuito", "basico", "estandar", "premium"];
 
-// Número máximo de vacantes activas simultáneas por plan
+// Número máximo de vacantes activas simultáneas por plan.
+// El plan "gratuito" es además de un solo uso en la vida de la empresa (no
+// recurrente): una vez que publicó su primera vacante gratis (en cualquier
+// estado: activa, cerrada o expirada), no puede publicar otra gratis aunque
+// la primera ya esté cerrada — debe comprar una vacante única o subir de plan.
 export const LIMITE_VACANTES = {
   gratuito: 1,
-  basico:   5,
-  estandar: 15,
+  basico:   3,
+  estandar: 8,
   premium:  Infinity,
+};
+
+// Compra de una sola vacante adicional, sin cambiar de plan. Pensada para
+// empresas que ya agotaron su vacante gratuita y solo necesitan publicar una más.
+export const VACANTE_UNICA = {
+  nombre: "Vacante única",
+  precio: 49900,
+  descripcion: "1 vacante adicional, pago único (no recurrente).",
 };
 
 // Puede ver la hoja de vida completa del candidato
@@ -49,30 +66,30 @@ export const PLANES_INFO = [
     key: "gratuito",
     nombre: "Gratis",
     precio: 0,
-    badge: "Gratis por tiempo limitado",
-    vacantesLabel: "1 vacante",
+    badge: "Solo primera vez",
+    vacantesLabel: "1 vacante (única vez)",
     features: [
-      "1 vacante activa",
+      "1 vacante activa — solo la primera vez",
       "Solo ver nombre de candidatos",
     ],
   },
   {
     key: "basico",
     nombre: "Básico",
-    precio: 59900,
-    vacantesLabel: "5 vacantes",
+    precio: 89900,
+    vacantesLabel: "3 vacantes",
     features: [
-      "5 vacantes activas",
+      "3 vacantes activas",
       "Ver hojas de vida completas",
     ],
   },
   {
     key: "estandar",
     nombre: "Estándar",
-    precio: 119900,
-    vacantesLabel: "15 vacantes",
+    precio: 189900,
+    vacantesLabel: "8 vacantes",
     features: [
-      "15 vacantes activas",
+      "8 vacantes activas",
       "Ver hojas de vida completas",
       "Contactar candidatos",
     ],
@@ -80,7 +97,7 @@ export const PLANES_INFO = [
   {
     key: "premium",
     nombre: "Premium",
-    precio: 249900,
+    precio: 299900,
     vacantesLabel: "Vacantes ilimitadas",
     features: [
       "Vacantes ilimitadas",
@@ -95,4 +112,16 @@ export const PLANES_INFO = [
 export function formatPrecioPlan(valor) {
   if (valor === 0) return "$0";
   return `$${valor.toLocaleString("es-CO")}`;
+}
+
+// Determina si una empresa puede publicar/renovar una vacante según su plan
+// y su historial real en Supabase:
+// - "gratuito": de un solo uso — cuenta TODAS las vacantes que haya tenido
+//   alguna vez (cualquier estado), no solo las activas.
+// - resto de planes: límite de vacantes ACTIVAS simultáneas.
+export function puedeCrearVacante(plan, { totalHistorico = 0, activasActuales = 0 } = {}) {
+  if (plan === "gratuito") return totalHistorico < 1;
+  const limite = LIMITE_VACANTES[plan] ?? 1;
+  if (!Number.isFinite(limite)) return true;
+  return activasActuales < limite;
 }
