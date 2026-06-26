@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { notificarNuevaPostulacionAEmpresa, notificarPostulacionEnviadaACandidato } from "../lib/notificacionesEmail";
 
 function diasDesde(fechaStr) {
   if (!fechaStr) return "";
@@ -99,6 +100,27 @@ export default function DetalleOferta() {
         throw error;
       }
       setPostulado(true);
+
+      // Notificaciones por email (fire-and-forget, nunca rompen el flujo)
+      supabase
+        .from("usuarios")
+        .select("email")
+        .eq("id", oferta.empresa_id)
+        .maybeSingle()
+        .then(({ data: empresaUsuario }) => {
+          notificarNuevaPostulacionAEmpresa({
+            empresaEmail:     empresaUsuario?.email,
+            empresaNombre:    oferta.nombre_empresa,
+            candidatoNombre:  usuario.nombre,
+            cargo:            oferta.titulo,
+          });
+        });
+      notificarPostulacionEnviadaACandidato({
+        candidatoEmail:   usuario.email,
+        candidatoNombre:  usuario.nombre,
+        cargo:            oferta.titulo,
+        empresaNombre:    oferta.nombre_empresa,
+      });
     } catch (err) {
       setErrorPost(err.message || "No se pudo enviar la postulación. Intenta de nuevo.");
     } finally {

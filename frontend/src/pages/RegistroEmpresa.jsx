@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { REGION } from "../config/region";
 import { useStats } from "../hooks/useStats";
 import BotonesOAuth from "../components/auth/BotonesOAuth";
+import { enviarBienvenidaEmpresa } from "../lib/notificacionesEmail";
 
 const BENEFICIOS = [
   { icono: "👥", texto: "Banco de candidatos especializados en el sector salud" },
@@ -58,6 +59,7 @@ export default function RegistroEmpresa() {
     setErrorGeneral("");
     try {
       const { user } = await registrarEmpresa(form.nombre.trim(), form.email.trim(), form.password);
+      enviarBienvenidaEmpresa({ email: form.email.trim(), nombreEmpresa: form.nombre.trim() });
       if (user && !user.confirmed_at) {
         setExito(true);
       } else {

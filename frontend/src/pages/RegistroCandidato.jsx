@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { REGION } from "../config/region";
 import BotonesOAuth from "../components/auth/BotonesOAuth";
+import { enviarBienvenidaCandidato } from "../lib/notificacionesEmail";
 
 const SUPERADMIN_EMAIL = "jaimepinedo95@gmail.com";
 
@@ -58,6 +59,7 @@ export default function RegistroCandidato() {
     setErrorGeneral("");
     try {
       const { user } = await registrarCandidato(form.nombre.trim(), form.email.trim(), form.password);
+      enviarBienvenidaCandidato({ email: form.email.trim(), nombre: form.nombre.trim() });
       // Si el email necesita confirmación, mostrar mensaje; si no, redirigir
       if (user && !user.confirmed_at) {
         setExito(true);
