@@ -19,8 +19,10 @@ export default function PerfilPublicoEmpresa() {
 
   useEffect(() => {
     if (!id) return;
+    // Vista pública segura: nunca expone teléfono, email ni NIT — los
+    // candidatos solo deben ver nombre, logo, descripción, tipo y ciudad.
     Promise.all([
-      supabase.from("perfiles_empresa").select("*, usuarios!inner(email)").eq("usuario_id", id).single(),
+      supabase.from("perfiles_empresa_publico").select("*").eq("usuario_id", id).single(),
       supabase.from("ofertas_con_empresa").select("id, titulo, ciudad, tipo_contrato, salario_min, salario_max, urgente")
         .eq("empresa_id", id).eq("estado", "activa").order("fecha_publicacion", { ascending: false }),
     ]).then(([{ data: e }, { data: o }]) => {
@@ -77,8 +79,6 @@ export default function PerfilPublicoEmpresa() {
               </div>
               <div className="flex flex-wrap gap-4 text-blue-200 text-sm">
                 {empresa.ciudad && <span>📍 {empresa.ciudad}</span>}
-                {empresa.telefono && <span>📞 {empresa.telefono}</span>}
-                {empresa.nit && <span>NIT: {empresa.nit}</span>}
               </div>
             </div>
             <div className="bg-white/10 rounded-2xl px-5 py-3 text-center flex-shrink-0">
@@ -93,36 +93,30 @@ export default function PerfilPublicoEmpresa() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h2 className="font-bold text-azul-marino mb-4">Información de contacto</h2>
+              <h2 className="font-bold text-azul-marino mb-4">Sobre la empresa</h2>
               <ul className="space-y-3 text-sm">
-                {empresa.usuarios?.email && (
+                {empresa.tipo_empresa && (
                   <li className="flex items-center gap-3">
-                    <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">📧</span>
-                    <div className="min-w-0">
-                      <p className="text-gray-400 text-xs">Correo</p>
-                      <p className="text-gray-700 font-medium truncate">{empresa.usuarios.email}</p>
+                    <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">🏥</span>
+                    <div>
+                      <p className="text-gray-400 text-xs">Tipo de institución</p>
+                      <p className="text-gray-700 font-medium">{empresa.tipo_empresa}</p>
                     </div>
                   </li>
                 )}
-                {empresa.telefono && (
+                {empresa.ciudad && (
                   <li className="flex items-center gap-3">
-                    <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">📞</span>
+                    <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">📍</span>
                     <div>
-                      <p className="text-gray-400 text-xs">Teléfono</p>
-                      <p className="text-gray-700 font-medium">{empresa.telefono}</p>
-                    </div>
-                  </li>
-                )}
-                {empresa.nit && (
-                  <li className="flex items-center gap-3">
-                    <span className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">🪪</span>
-                    <div>
-                      <p className="text-gray-400 text-xs">NIT</p>
-                      <p className="text-gray-700 font-medium">{empresa.nit}</p>
+                      <p className="text-gray-400 text-xs">Ciudad</p>
+                      <p className="text-gray-700 font-medium">{empresa.ciudad}</p>
                     </div>
                   </li>
                 )}
               </ul>
+              <p className="text-gray-400 text-xs mt-4 pt-4 border-t border-gray-50">
+                Para contactar a esta empresa, postúlate a una de sus vacantes activas.
+              </p>
             </div>
             <Link to="/empleos"
               className="block bg-esmeralda text-white text-center rounded-2xl px-5 py-3 font-semibold hover:bg-esmeralda-hover transition-colors">

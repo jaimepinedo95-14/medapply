@@ -170,9 +170,17 @@ export default function MisOfertas() {
               </p>
             )}
           </div>
-          <div className="flex-shrink-0 text-center">
-            <p className="text-2xl font-bold text-azul-marino">{postulados}</p>
-            <p className="text-xs text-gray-400">postulados</p>
+          <div className="flex-shrink-0">
+            <span
+              title={postulados === 1 ? "1 candidato postulado" : `${postulados} candidatos postulados`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${
+                postulados > 0
+                  ? "bg-esmeralda text-white shadow-sm"
+                  : "bg-gray-100 text-gray-400"
+              }`}
+            >
+              👥 {postulados}
+            </span>
           </div>
         </div>
         <div className="flex gap-3 mt-4 pt-4 border-t border-gray-50 flex-wrap">
