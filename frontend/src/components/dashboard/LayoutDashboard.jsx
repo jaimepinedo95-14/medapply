@@ -36,6 +36,7 @@ const LINKS = {
     { ruta: "/empresa/candidatos",        etiqueta: "Candidatos",         icono: Iconos.usuarios },
     { ruta: "/empresa/buscar-candidatos", etiqueta: "Buscar candidatos",  icono: Iconos.buscar },
     { ruta: "/empresa/plan",              etiqueta: "Mi plan",            icono: Iconos.estrella },
+    { ruta: "/empresa/configuracion",     etiqueta: "Configuración",      icono: Iconos.config },
   ],
 };
 

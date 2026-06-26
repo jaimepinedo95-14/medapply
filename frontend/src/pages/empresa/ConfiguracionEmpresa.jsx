@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
 import { InputCampo, SelectCampo } from "../../components/common/InputCampo";
-import { REGION } from "../../config/region";
+import { MUNICIPIOS_COLOMBIA } from "../../config/municipios";
+import { DEPARTAMENTO_POR_MUNICIPIO } from "../../config/departamentosColombia";
 
 const TIPOS_EMPRESA = [
   "Clínica", "Hospital", "IPS", "EPS", "Empresa de ambulancias",
@@ -11,35 +11,38 @@ const TIPOS_EMPRESA = [
   "Farmacia / Droguería", "Otro",
 ];
 
-export default function ConfiguracionEmpresa() {
-  const { usuario, logout } = useAuth();
-  const navigate = useNavigate();
-  const logoRef  = useRef();
+const TABS = [
+  { key: "perfil",   label: "Perfil de la empresa" },
+  { key: "password", label: "Cambiar contraseña" },
+  { key: "contacto", label: "Información de contacto" },
+];
 
-  const [tab, setTab]                       = useState("perfil");
-  const [confirmarEliminar, setConfirmarEliminar] = useState(false);
-  const [guardado, setGuardado]             = useState(false);
-  const [cargando, setCargando]             = useState(true);
-  const [guardando, setGuardando]           = useState(false);
-  const [errorGuardar, setErrorGuardar]     = useState(null);
-  const [logoFile, setLogoFile]             = useState(null);
-  const [logoPreview, setLogoPreview]       = useState(null);
+export default function ConfiguracionEmpresa() {
+  const { usuario } = useAuth();
+  const logoRef = useRef();
+
+  const [tab, setTab]                   = useState("perfil");
+  const [cargando, setCargando]         = useState(true);
+  const [guardandoPerfil, setGuardandoPerfil]     = useState(false);
+  const [guardandoPassword, setGuardandoPassword] = useState(false);
+  const [guardandoContacto, setGuardandoContacto]  = useState(false);
+  const [mensaje, setMensaje]           = useState(null); // { tipo: "ok"|"error", texto }
+  const [logoFile, setLogoFile]         = useState(null);
+  const [logoPreview, setLogoPreview]   = useState(null);
 
   const [perfil, setPerfil] = useState({
     nombre: "", nit: "", tipo: "", ciudad: "",
-    telefono: "", descripcion: "", sitioWeb: "", logo: null,
+    descripcion: "", sitioWeb: "", logo: null,
   });
 
-  const [acceso, setAcceso] = useState({
-    passwordActual: "", passwordNuevo: "", confirmarPassword: "",
-  });
-  const [erroresAcceso, setErroresAcceso] = useState({});
+  const [contacto, setContacto] = useState({ telefono: "" });
 
-  const [notis, setNotis] = useState({
-    nuevosPostulados: true, recordatorioOfertas: true, novedades: false,
+  const [password, setPassword] = useState({
+    actual: "", nueva: "", confirmar: "",
   });
+  const [erroresPassword, setErroresPassword] = useState({});
 
-  // Cargar perfil de empresa desde Supabase al montar
+  // Cargar perfil real de la empresa desde Supabase
   useEffect(() => {
     if (!usuario?.id) { setCargando(false); return; }
     supabase
@@ -54,17 +57,22 @@ export default function ConfiguracionEmpresa() {
             nit:         data.nit            || "",
             tipo:        data.tipo_empresa   || "",
             ciudad:      data.ciudad         || "",
-            telefono:    data.telefono       || "",
             descripcion: data.descripcion    || "",
             sitioWeb:    data.sitio_web      || "",
             logo:        data.logo           || null,
           });
+          setContacto({ telefono: data.telefono || "" });
           if (data.logo) setLogoPreview(data.logo);
         }
         setCargando(false);
       })
       .catch(() => setCargando(false));
   }, [usuario?.id]);
+
+  function mostrarMensaje(tipo, texto) {
+    setMensaje({ tipo, texto });
+    setTimeout(() => setMensaje(null), 4000);
+  }
 
   const handleLogo = (e) => {
     const file = e.target.files?.[0];
@@ -75,92 +83,109 @@ export default function ConfiguracionEmpresa() {
     reader.readAsDataURL(file);
   };
 
+  // ── SECCIÓN 1: Perfil de la empresa ─────────────────────────────────────────
   const guardarPerfil = async () => {
     if (!usuario?.id) return;
-    setGuardando(true);
-    setErrorGuardar(null);
+    setGuardandoPerfil(true);
     try {
       let logoUrl = perfil.logo;
 
-      // Subir nuevo logo si fue seleccionado
       if (logoFile) {
         const ext  = logoFile.name.split(".").pop();
         const path = `${usuario.id}/logo.${ext}`;
         const { error: uploadErr } = await supabase.storage
           .from("logos")
           .upload(path, logoFile, { upsert: true });
-        if (!uploadErr) {
-          const { data: { publicUrl } } = supabase.storage.from("logos").getPublicUrl(path);
-          logoUrl = publicUrl;
-          setLogoFile(null);
-          setPerfil((p) => ({ ...p, logo: publicUrl }));
-          setLogoPreview(publicUrl);
-        }
+        if (uploadErr) throw uploadErr;
+        const { data: { publicUrl } } = supabase.storage.from("logos").getPublicUrl(path);
+        logoUrl = publicUrl;
+        setLogoFile(null);
+        setPerfil((p) => ({ ...p, logo: publicUrl }));
+        setLogoPreview(publicUrl);
       }
 
       const { error } = await supabase
         .from("perfiles_empresa")
         .upsert(
           {
-            usuario_id:    usuario.id,
+            usuario_id:     usuario.id,
             nombre_empresa: perfil.nombre,
-            nit:           perfil.nit,
-            tipo_empresa:  perfil.tipo,
-            ciudad:        perfil.ciudad,
-            telefono:      perfil.telefono,
-            descripcion:   perfil.descripcion,
-            sitio_web:     perfil.sitioWeb,
-            logo:          logoUrl,
-            updated_at:    new Date().toISOString(),
+            nit:            perfil.nit,
+            tipo_empresa:   perfil.tipo,
+            ciudad:         perfil.ciudad,
+            descripcion:    perfil.descripcion,
+            sitio_web:      perfil.sitioWeb,
+            logo:           logoUrl,
+            updated_at:     new Date().toISOString(),
           },
           { onConflict: "usuario_id" }
         );
 
       if (error) throw error;
-      mostrarGuardado();
+      mostrarMensaje("ok", "Perfil de la empresa actualizado.");
     } catch (e) {
-      setErrorGuardar(e.message);
+      mostrarMensaje("error", e.message);
     } finally {
-      setGuardando(false);
+      setGuardandoPerfil(false);
     }
   };
 
-  const guardarAcceso = async () => {
+  // ── SECCIÓN 2: Cambiar contraseña ───────────────────────────────────────────
+  const cambiarPassword = async () => {
     const err = {};
-    if (!acceso.passwordActual)      err.passwordActual     = "Ingresa tu contraseña actual.";
-    if (acceso.passwordNuevo && acceso.passwordNuevo.length < 8)
-                                      err.passwordNuevo     = "Mínimo 8 caracteres.";
-    if (acceso.passwordNuevo && acceso.passwordNuevo !== acceso.confirmarPassword)
-                                      err.confirmarPassword = "Las contraseñas no coinciden.";
-    if (Object.keys(err).length) { setErroresAcceso(err); return; }
-    setErroresAcceso({});
-    setGuardando(true);
+    if (!password.actual)                err.actual    = "Ingresa tu contraseña actual.";
+    if (!password.nueva || password.nueva.length < 6)
+                                          err.nueva     = "Mínimo 6 caracteres.";
+    if (password.nueva !== password.confirmar)
+                                          err.confirmar = "Las contraseñas no coinciden.";
+    if (Object.keys(err).length) { setErroresPassword(err); return; }
+    setErroresPassword({});
+    setGuardandoPassword(true);
     try {
-      if (acceso.passwordNuevo) {
-        const { error } = await supabase.auth.updateUser({ password: acceso.passwordNuevo });
-        if (error) throw error;
+      // Verifica la contraseña actual re-autenticando contra Supabase antes
+      // de cambiarla — updateUser() no valida la contraseña anterior por sí solo.
+      const { error: errAuth } = await supabase.auth.signInWithPassword({
+        email: usuario.email,
+        password: password.actual,
+      });
+      if (errAuth) {
+        setErroresPassword({ actual: "La contraseña actual no es correcta." });
+        return;
       }
-      setAcceso({ passwordActual: "", passwordNuevo: "", confirmarPassword: "" });
-      mostrarGuardado();
+
+      const { error } = await supabase.auth.updateUser({ password: password.nueva });
+      if (error) throw error;
+
+      setPassword({ actual: "", nueva: "", confirmar: "" });
+      mostrarMensaje("ok", "Contraseña actualizada correctamente.");
     } catch (e) {
-      setErroresAcceso({ passwordActual: e.message });
+      mostrarMensaje("error", e.message);
     } finally {
-      setGuardando(false);
+      setGuardandoPassword(false);
     }
   };
 
-  const mostrarGuardado = () => {
-    setGuardado(true);
-    setTimeout(() => setGuardado(false), 3000);
+  // ── SECCIÓN 3: Información de contacto ──────────────────────────────────────
+  const guardarContacto = async () => {
+    if (!usuario?.id) return;
+    setGuardandoContacto(true);
+    try {
+      const { error } = await supabase
+        .from("perfiles_empresa")
+        .upsert(
+          { usuario_id: usuario.id, telefono: contacto.telefono, updated_at: new Date().toISOString() },
+          { onConflict: "usuario_id" }
+        );
+      if (error) throw error;
+      mostrarMensaje("ok", "Información de contacto actualizada.");
+    } catch (e) {
+      mostrarMensaje("error", e.message);
+    } finally {
+      setGuardandoContacto(false);
+    }
   };
 
-  const manejarLogout = () => { logout(); navigate("/"); };
-
-  const TABS = [
-    { key: "perfil",         label: "Perfil de empresa" },
-    { key: "acceso",         label: "Acceso y seguridad" },
-    { key: "notificaciones", label: "Notificaciones" },
-  ];
+  const departamentoActual = DEPARTAMENTO_POR_MUNICIPIO[perfil.ciudad] || "";
 
   if (cargando) {
     return (
@@ -177,7 +202,7 @@ export default function ConfiguracionEmpresa() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-azul-marino">Configuración</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Gestiona los datos de tu empresa y las preferencias de la cuenta.
+          Gestiona los datos de tu empresa, tu contraseña y tu información de contacto.
         </p>
       </div>
 
@@ -198,19 +223,18 @@ export default function ConfiguracionEmpresa() {
         ))}
       </div>
 
-      {/* Alertas */}
-      {guardado && (
-        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-5 text-green-700 text-sm font-semibold">
-          ✅ Cambios guardados correctamente.
-        </div>
-      )}
-      {errorGuardar && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5 text-red-700 text-sm">
-          ❌ {errorGuardar}
+      {/* Mensaje de resultado */}
+      {mensaje && (
+        <div className={`rounded-xl px-4 py-3 mb-5 text-sm font-semibold ${
+          mensaje.tipo === "ok"
+            ? "bg-green-50 border border-green-200 text-green-700"
+            : "bg-red-50 border border-red-200 text-red-700"
+        }`}>
+          {mensaje.tipo === "ok" ? "✅ " : "❌ "}{mensaje.texto}
         </div>
       )}
 
-      {/* ── TAB: Perfil de empresa ── */}
+      {/* ── SECCIÓN 1: Perfil de la empresa ── */}
       {tab === "perfil" && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           {/* Logo */}
@@ -254,11 +278,6 @@ export default function ConfiguracionEmpresa() {
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:border-esmeralda"
               />
             </div>
-            <InputCampo
-              label="Teléfono de contacto"
-              value={perfil.telefono}
-              onChange={(e) => setPerfil((p) => ({ ...p, telefono: e.target.value }))}
-            />
             <SelectCampo
               label="Tipo de empresa"
               value={perfil.tipo}
@@ -267,17 +286,28 @@ export default function ConfiguracionEmpresa() {
               <option value="">Selecciona el tipo</option>
               {TIPOS_EMPRESA.map((t) => <option key={t} value={t}>{t}</option>)}
             </SelectCampo>
-            <SelectCampo
-              label="Ciudad"
-              value={perfil.ciudad}
-              onChange={(e) => setPerfil((p) => ({ ...p, ciudad: e.target.value }))}
-            >
-              <option value="">Selecciona la ciudad</option>
-              {REGION.ciudades.map((c) => <option key={c} value={c}>{c}</option>)}
-            </SelectCampo>
+            <div>
+              <SelectCampo
+                label="Ciudad"
+                value={perfil.ciudad}
+                onChange={(e) => setPerfil((p) => ({ ...p, ciudad: e.target.value }))}
+              >
+                <option value="">Selecciona la ciudad</option>
+                {MUNICIPIOS_COLOMBIA.map((c) => <option key={c} value={c}>{c}</option>)}
+              </SelectCampo>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-azul-marino mb-1.5">Departamento</label>
+              <input
+                value={departamentoActual}
+                readOnly
+                placeholder="Se completa según la ciudad"
+                className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500 outline-none cursor-not-allowed"
+              />
+            </div>
             <div className="md:col-span-2">
               <InputCampo
-                label="Sitio web"
+                label="Sitio web (opcional)"
                 value={perfil.sitioWeb}
                 onChange={(e) => setPerfil((p) => ({ ...p, sitioWeb: e.target.value }))}
                 placeholder="www.ejemplo.com"
@@ -298,118 +328,87 @@ export default function ConfiguracionEmpresa() {
           </div>
           <button
             onClick={guardarPerfil}
-            disabled={guardando}
+            disabled={guardandoPerfil}
             className="btn-secundario mt-5 py-3 px-6 text-sm disabled:opacity-50"
           >
-            {guardando ? "Guardando..." : "Guardar cambios del perfil"}
+            {guardandoPerfil ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>
       )}
 
-      {/* ── TAB: Acceso y seguridad ── */}
-      {tab === "acceso" && (
+      {/* ── SECCIÓN 2: Cambiar contraseña ── */}
+      {tab === "password" && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-azul-marino mb-1">Cambiar contraseña</h2>
-          <p className="text-gray-400 text-sm mb-5">
-            Correo actual: <strong>{usuario?.email}</strong>
-          </p>
-          <div className="space-y-4">
+          <h2 className="text-lg font-bold text-azul-marino mb-5">Cambiar contraseña</h2>
+          <div className="space-y-4 max-w-md">
             <InputCampo
               label="Contraseña actual"
               type="password"
-              value={acceso.passwordActual}
-              onChange={(e) => setAcceso((p) => ({ ...p, passwordActual: e.target.value }))}
-              error={erroresAcceso.passwordActual}
+              value={password.actual}
+              onChange={(e) => setPassword((p) => ({ ...p, actual: e.target.value }))}
+              error={erroresPassword.actual}
             />
             <InputCampo
-              label="Nueva contraseña (opcional)"
+              label="Nueva contraseña"
               type="password"
-              value={acceso.passwordNuevo}
-              onChange={(e) => setAcceso((p) => ({ ...p, passwordNuevo: e.target.value }))}
-              error={erroresAcceso.passwordNuevo}
-              placeholder="Mínimo 8 caracteres"
+              value={password.nueva}
+              onChange={(e) => setPassword((p) => ({ ...p, nueva: e.target.value }))}
+              error={erroresPassword.nueva}
+              placeholder="Mínimo 6 caracteres"
             />
             <InputCampo
               label="Confirmar nueva contraseña"
               type="password"
-              value={acceso.confirmarPassword}
-              onChange={(e) => setAcceso((p) => ({ ...p, confirmarPassword: e.target.value }))}
-              error={erroresAcceso.confirmarPassword}
-              placeholder="Repite la contraseña"
+              value={password.confirmar}
+              onChange={(e) => setPassword((p) => ({ ...p, confirmar: e.target.value }))}
+              error={erroresPassword.confirmar}
+              placeholder="Repite la nueva contraseña"
             />
           </div>
           <button
-            onClick={guardarAcceso}
-            disabled={guardando}
+            onClick={cambiarPassword}
+            disabled={guardandoPassword}
             className="btn-secundario mt-5 py-3 px-6 text-sm disabled:opacity-50"
           >
-            {guardando ? "Guardando..." : "Guardar cambios"}
+            {guardandoPassword ? "Cambiando..." : "Cambiar contraseña"}
           </button>
         </div>
       )}
 
-      {/* ── TAB: Notificaciones ── */}
-      {tab === "notificaciones" && (
+      {/* ── SECCIÓN 3: Información de contacto ── */}
+      {tab === "contacto" && (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-azul-marino mb-5">Notificaciones por correo</h2>
-          <div className="space-y-4">
-            {[
-              { key: "nuevosPostulados",    label: "Nuevos candidatos postulados a mis ofertas" },
-              { key: "recordatorioOfertas", label: "Recordatorio de ofertas próximas a vencer" },
-              { key: "novedades",           label: "Novedades y consejos de MedApply" },
-            ].map(({ key, label }) => (
-              <label key={key} className="flex items-center justify-between cursor-pointer">
-                <span className="text-sm text-gray-700">{label}</span>
-                <div
-                  onClick={() => setNotis((p) => ({ ...p, [key]: !p[key] }))}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors ${
-                    notis[key] ? "bg-esmeralda" : "bg-gray-200"
-                  }`}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    notis[key] ? "translate-x-5" : ""
-                  }`} />
-                </div>
+          <h2 className="text-lg font-bold text-azul-marino mb-5">Información de contacto</h2>
+          <div className="space-y-4 max-w-md">
+            <div>
+              <label className="block text-sm font-semibold text-azul-marino mb-1.5">
+                Email de contacto
               </label>
-            ))}
+              <input
+                value={usuario?.email || ""}
+                readOnly
+                className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500 outline-none cursor-not-allowed"
+              />
+              <p className="text-gray-400 text-xs mt-1">
+                El email no se puede cambiar desde aquí. Es el correo con el que iniciaste sesión.
+              </p>
+            </div>
+            <InputCampo
+              label="Teléfono de contacto"
+              value={contacto.telefono}
+              onChange={(e) => setContacto((p) => ({ ...p, telefono: e.target.value }))}
+              placeholder="3XX XXX XXXX"
+            />
           </div>
-          <button onClick={mostrarGuardado} className="btn-secundario mt-6 py-3 px-6 text-sm">
-            Guardar preferencias
+          <button
+            onClick={guardarContacto}
+            disabled={guardandoContacto}
+            className="btn-secundario mt-5 py-3 px-6 text-sm disabled:opacity-50"
+          >
+            {guardandoContacto ? "Guardando..." : "Guardar"}
           </button>
         </div>
       )}
-
-      {/* Zona de riesgo */}
-      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-sm mt-5">
-        <h2 className="text-lg font-bold text-red-600 mb-2">Zona de riesgo</h2>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={manejarLogout}
-            className="px-5 py-2 text-sm border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50"
-          >
-            Cerrar sesión
-          </button>
-          {!confirmarEliminar ? (
-            <button
-              onClick={() => setConfirmarEliminar(true)}
-              className="px-5 py-2 text-sm border border-red-300 rounded-xl text-red-600 hover:bg-red-50"
-            >
-              Eliminar cuenta de empresa
-            </button>
-          ) : (
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-sm text-red-600 font-semibold">¿Eliminar cuenta y todas las ofertas?</p>
-              <button className="px-4 py-2 text-xs bg-red-600 text-white rounded-xl">Sí, eliminar</button>
-              <button
-                onClick={() => setConfirmarEliminar(false)}
-                className="px-4 py-2 text-xs border border-gray-300 rounded-xl"
-              >
-                Cancelar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
