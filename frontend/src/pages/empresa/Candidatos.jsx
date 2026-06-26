@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { notificarCambioEstadoPostulacion } from "../../lib/notificacionesEmail";
 
 const ESTADOS = [
   { value: "pendiente",       label: "Nuevo",          color: "bg-blue-100 text-blue-700" },
@@ -118,12 +119,21 @@ export default function Candidatos() {
   useEffect(() => { cargar(); }, [cargar]);
 
   async function cambiarEstado(postulacionId, nuevoEstado) {
+    const postulante = postulantes.find((p) => p.id === postulacionId);
     setPostulantes((p) => p.map((x) => x.id === postulacionId ? { ...x, estado: nuevoEstado } : x));
     const { error: err } = await supabase
       .from("postulaciones")
       .update({ estado: nuevoEstado })
       .eq("id", postulacionId);
-    if (err) cargar(); // revertir recargando si falla
+    if (err) { cargar(); return; } // revertir recargando si falla
+
+    notificarCambioEstadoPostulacion({
+      candidatoEmail:  postulante?.email,
+      candidatoNombre: postulante?.nombre,
+      cargo:           postulante?.ofertaTitulo,
+      empresaNombre:   usuario?.nombre,
+      nuevoEstado,
+    });
   }
 
   function manejarFiltroOferta(id) {

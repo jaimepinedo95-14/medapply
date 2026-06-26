@@ -12,6 +12,18 @@ export const TIPOS_NOTIFICACION = {
   RECORDATORIO_PERFIL:  "recordatorio_perfil",
 };
 
+// La tabla real (001_schema.sql) guarda created_at, accion_href y accion_label
+// como columnas planas — no fecha/accion.href/accion.label como espera la UI.
+// Se normaliza una sola vez aquí para que todos los consumidores reciban la
+// forma que ya usan.
+function normalizarNotificacion(row) {
+  return {
+    ...row,
+    fecha: row.created_at,
+    accion: row.accion_href ? { href: row.accion_href, label: row.accion_label || "Ver más" } : null,
+  };
+}
+
 export function NotificacionesProvider({ children }) {
   const { usuario } = useAuth();
   const [notificaciones, setNotificaciones] = useState([]);
@@ -32,7 +44,7 @@ export function NotificacionesProvider({ children }) {
         .limit(50);
 
       if (error) throw error;
-      setNotificaciones(data ?? []);
+      setNotificaciones((data ?? []).map(normalizarNotificacion));
     } catch {
       // Tabla no existente aún o sin conexión → sin notificaciones
       setNotificaciones([]);
@@ -54,7 +66,7 @@ export function NotificacionesProvider({ children }) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notificaciones", filter: `usuario_id=eq.${usuario.id}` },
         (payload) => {
-          setNotificaciones((prev) => [payload.new, ...prev]);
+          setNotificaciones((prev) => [normalizarNotificacion(payload.new), ...prev]);
         }
       )
       .subscribe();

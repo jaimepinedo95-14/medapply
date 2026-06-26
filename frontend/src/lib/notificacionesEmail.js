@@ -69,6 +69,34 @@ export function notificarPostulacionEnviadaACandidato({ candidatoEmail, candidat
   });
 }
 
+const TEXTO_POR_ESTADO = {
+  vista:           "fue revisada por la empresa",
+  preseleccionada: "¡fue preseleccionada! La empresa quiere avanzar contigo",
+  rechazada:       "no fue seleccionada esta vez",
+};
+
+export function notificarCambioEstadoPostulacion({ candidatoEmail, candidatoNombre, cargo, empresaNombre, nuevoEstado }) {
+  if (!candidatoEmail) return;
+  const detalle = TEXTO_POR_ESTADO[nuevoEstado];
+  if (!detalle) return; // "pendiente" (recién creada) no aplica aquí
+  const html = plantillaBase(`
+    <p style="font-size: 15px; line-height: 1.6;">
+      Hola ${candidatoNombre || "candidato"},<br/><br/>
+      Tu postulación a "<strong>${cargo}</strong>" en <strong>${empresaNombre}</strong> ${detalle}.
+    </p>
+    <p style="margin: 24px 0;">
+      <a href="https://medapply.co/candidato/postulaciones" style="background:#059669;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
+        Ver mis postulaciones →
+      </a>
+    </p>
+  `);
+  return enviarEmail({
+    to: candidatoEmail,
+    subject: `Actualización de tu postulación — ${cargo}`,
+    html,
+  });
+}
+
 // ── Bienvenida al registrarse ────────────────────────────────────────────────
 
 export function enviarBienvenidaCandidato({ email, nombre }) {

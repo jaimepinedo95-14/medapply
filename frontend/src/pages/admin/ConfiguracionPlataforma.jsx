@@ -68,10 +68,12 @@ export default function ConfiguracionPlataforma() {
   const cambiarLimite = (campo) => (val) => setLimites((p) => ({ ...p, [campo]: Number(val) }));
   const toggleFeature = (campo) => setFeatures((p) => ({ ...p, [campo]: !p[campo] }));
 
+  // Esta sección todavía no persiste en Supabase — no existe una tabla de
+  // configuración de plataforma. Se avisa explícitamente en vez de simular
+  // un guardado exitoso que no ocurrió.
   const guardar = () => {
-    // En producción llama a la API
     setGuardado(true);
-    setTimeout(() => setGuardado(false), 2500);
+    setTimeout(() => setGuardado(false), 4000);
   };
 
   return (
@@ -182,10 +184,15 @@ export default function ConfiguracionPlataforma() {
       </SeccionConfig>
 
       {/* Botón guardar */}
-      <div className="flex justify-end pb-6">
+      <div className="flex justify-end items-center gap-3 pb-6">
+        {guardado && (
+          <p className="text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2">
+            ⚠️ Esta sección es una vista previa — el guardado real todavía no está conectado.
+          </p>
+        )}
         <button onClick={guardar}
           className="bg-esmeralda hover:bg-esmeralda-hover text-white font-bold px-8 py-3.5 rounded-xl transition-colors">
-          {guardado ? "✅ Guardado" : "Guardar configuración"}
+          Guardar configuración
         </button>
       </div>
     </div>

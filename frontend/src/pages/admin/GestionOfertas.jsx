@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 
-const ESTADOS = ["activa", "pausada", "eliminada"];
+const ESTADOS = ["activa", "pausada", "cerrada", "expirada", "pendiente", "eliminada"];
 const COLORES = {
   activa:    "bg-green-100 text-green-700",
   pausada:   "bg-yellow-100 text-yellow-700",
+  cerrada:   "bg-gray-100 text-gray-500",
+  expirada:  "bg-orange-100 text-orange-600",
+  pendiente: "bg-blue-100 text-blue-600",
   eliminada: "bg-red-100 text-red-600",
 };
 

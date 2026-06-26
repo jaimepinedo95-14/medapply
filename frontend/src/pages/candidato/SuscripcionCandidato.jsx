@@ -37,14 +37,16 @@ const PLANES = [
 
 export default function SuscripcionCandidato() {
   const [procesando, setProcesando] = useState(false);
+  const [mensaje, setMensaje] = useState("");
 
   const activarPlan = () => {
     setProcesando(true);
-    // Aquí irá la integración con pasarela de pago
+    // Pasarela de pago (Wompi) todavía no está activa
     setTimeout(() => {
-      alert("Próximamente: integración con pasarela de pago.");
+      setMensaje("Próximamente — escríbenos a hola@medapply.co mientras activamos los pagos.");
       setProcesando(false);
-    }, 800);
+      setTimeout(() => setMensaje(""), 5000);
+    }, 600);
   };
 
   return (
@@ -62,6 +64,12 @@ export default function SuscripcionCandidato() {
           <p className="text-gray-500 text-xs mt-0.5">Actualiza a Destacado para aparecer primero en las búsquedas de empresas.</p>
         </div>
       </div>
+
+      {mensaje && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 mb-6 text-center text-sm text-azul-marino font-semibold">
+          {mensaje}
+        </div>
+      )}
 
       {/* Tarjetas de planes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

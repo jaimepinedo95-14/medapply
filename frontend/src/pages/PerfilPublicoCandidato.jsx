@@ -1,12 +1,13 @@
 // Perfil público de candidato — solo visible para empresas con plan Premium
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 
 export default function PerfilPublicoCandidato() {
   const { id } = useParams();
   const { usuario } = useAuth();
+  const navigate = useNavigate();
 
   const [candidato, setCandidato] = useState(null);
   const [cargando, setCargando]   = useState(true);
@@ -102,7 +103,10 @@ export default function PerfilPublicoCandidato() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <button className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+              <button
+                onClick={() => navigate(`/mensajes?otroId=${candidato.usuario_id}&nombre=${encodeURIComponent(nombre)}`)}
+                className="bg-esmeralda hover:bg-esmeralda-hover text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              >
                 ✉️ Contactar
               </button>
               {candidato.hoja_de_vida_url && (

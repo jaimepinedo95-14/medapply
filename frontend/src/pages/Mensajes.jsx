@@ -1,10 +1,12 @@
 ﻿import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 export default function Mensajes() {
   const { usuario } = useAuth();
   const esEmpresa = usuario?.rol === "empresa";
+  const [searchParams] = useSearchParams();
 
   const [conversaciones, setConversaciones] = useState([]);
   const [activo, setActivo]                 = useState(null);
@@ -88,11 +90,35 @@ export default function Mensajes() {
       }));
 
       setConversaciones(convsList);
+      abrirConversacionDesdeUrl(convsList);
     } catch (_) {
       setConversaciones([]);
     } finally {
       setCargando(false);
     }
+  }
+
+  // Permite llegar desde otra página con /mensajes?otroId=<id>&nombre=<nombre>
+  // (ej. botón "Contactar" en el perfil público de un candidato) y abrir esa
+  // conversación de inmediato, aunque todavía no tenga mensajes.
+  function abrirConversacionDesdeUrl(convsList) {
+    const otroId = searchParams.get("otroId");
+    if (!otroId) return;
+
+    const existente = convsList.find((c) => c.otroId === otroId);
+    if (existente) {
+      seleccionar(existente);
+      return;
+    }
+
+    const nombre = searchParams.get("nombre") || (esEmpresa ? "Candidato" : "Empresa");
+    const iniciales = nombre.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    const nueva = {
+      otroId, nombre, iniciales, logo: null, noLeidos: 0,
+      ultimoMensaje: "", hora: "", mensajesOrden: [],
+    };
+    setConversaciones((prev) => [nueva, ...prev]);
+    seleccionar(nueva);
   }
 
   async function seleccionar(conv) {
