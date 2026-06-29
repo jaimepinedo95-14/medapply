@@ -48,7 +48,8 @@ export default function NotFound() {
             {[
               { label: "Buscar empleos", href: "/empleos" },
               { label: "Para empresas",  href: "/para-empresas" },
-              { label: "Precios",        href: "/precios" },
+              // Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+              // { label: "Precios",        href: "/precios" },
               { label: "Nosotros",       href: "/nosotros" },
               { label: "FAQ",            href: "/faq" },
             ].map((l) => (

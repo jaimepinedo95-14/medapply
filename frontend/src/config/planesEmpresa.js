@@ -8,6 +8,17 @@
 // Los pagos (Wompi) todavía no están activos: todo lo de aquí es solo
 // texto/valores/lógica visual hasta que se integre el cobro real.
 
+// ──────────────────────────────────────────────────────────────────────────
+// 🔒 ACCESO GRATUITO ILIMITADO (temporal)
+// Decisión de producto: mientras los pagos (Wompi) no estén activos, TODOS
+// los usuarios tienen acceso gratuito ilimitado y no se muestra ningún plan
+// de pago. Para reactivar los planes reales, cambia esta bandera a `false`
+// — toda la configuración original (límites, precios, features por plan)
+// queda intacta abajo y vuelve a aplicarse automáticamente sin tocar nada
+// más en este archivo.
+// ──────────────────────────────────────────────────────────────────────────
+const ACCESO_GRATUITO_ILIMITADO = true;
+
 export const LABEL_PLAN = {
   gratuito: "Gratis",
   basico:   "Básico",
@@ -17,17 +28,21 @@ export const LABEL_PLAN = {
 
 export const ORDEN_PLAN = ["gratuito", "basico", "estandar", "premium"];
 
-// Número máximo de vacantes activas simultáneas por plan.
+// Número máximo de vacantes activas simultáneas por plan (valores reales).
 // El plan "gratuito" es además de un solo uso en la vida de la empresa (no
 // recurrente): una vez que publicó su primera vacante gratis (en cualquier
 // estado: activa, cerrada o expirada), no puede publicar otra gratis aunque
 // la primera ya esté cerrada — debe comprar una vacante única o subir de plan.
-export const LIMITE_VACANTES = {
+const LIMITE_VACANTES_REAL = {
   gratuito: 1,
   basico:   3,
   estandar: 8,
   premium:  Infinity,
 };
+
+export const LIMITE_VACANTES = ACCESO_GRATUITO_ILIMITADO
+  ? { gratuito: Infinity, basico: Infinity, estandar: Infinity, premium: Infinity }
+  : LIMITE_VACANTES_REAL;
 
 // Compra de una sola vacante adicional, sin cambiar de plan. Pensada para
 // empresas que ya agotaron su vacante gratuita y solo necesitan publicar una más.
@@ -37,29 +52,38 @@ export const VACANTE_UNICA = {
   descripcion: "1 vacante adicional, pago único (no recurrente).",
 };
 
-// Puede ver la hoja de vida completa del candidato
-export const PUEDE_VER_HV = {
+// Puede ver la hoja de vida completa del candidato (valores reales)
+const PUEDE_VER_HV_REAL = {
   gratuito: false,
   basico:   true,
   estandar: true,
   premium:  true,
 };
+export const PUEDE_VER_HV = ACCESO_GRATUITO_ILIMITADO
+  ? { gratuito: true, basico: true, estandar: true, premium: true }
+  : PUEDE_VER_HV_REAL;
 
-// Puede contactar directamente al candidato (ver su email)
-export const PUEDE_CONTACTAR = {
+// Puede contactar directamente al candidato (ver su email) (valores reales)
+const PUEDE_CONTACTAR_REAL = {
   gratuito: false,
   basico:   false,
   estandar: true,
   premium:  true,
 };
+export const PUEDE_CONTACTAR = ACCESO_GRATUITO_ILIMITADO
+  ? { gratuito: true, basico: true, estandar: true, premium: true }
+  : PUEDE_CONTACTAR_REAL;
 
-// Puede ver el perfil completo de un candidato encontrado en "Buscar candidatos"
-export const PUEDE_VER_PERFIL_BUSQUEDA = {
+// Puede ver el perfil completo en "Buscar candidatos" (valores reales)
+const PUEDE_VER_PERFIL_BUSQUEDA_REAL = {
   gratuito: false,
   basico:   false,
   estandar: true,
   premium:  true,
 };
+export const PUEDE_VER_PERFIL_BUSQUEDA = ACCESO_GRATUITO_ILIMITADO
+  ? { gratuito: true, basico: true, estandar: true, premium: true }
+  : PUEDE_VER_PERFIL_BUSQUEDA_REAL;
 
 export const PLANES_INFO = [
   {
@@ -120,8 +144,9 @@ export function formatPrecioPlan(valor) {
 //   alguna vez (cualquier estado), no solo las activas.
 // - resto de planes: límite de vacantes ACTIVAS simultáneas.
 export function puedeCrearVacante(plan, { totalHistorico = 0, activasActuales = 0 } = {}) {
+  if (ACCESO_GRATUITO_ILIMITADO) return true;
   if (plan === "gratuito") return totalHistorico < 1;
-  const limite = LIMITE_VACANTES[plan] ?? 1;
+  const limite = LIMITE_VACANTES_REAL[plan] ?? 1;
   if (!Number.isFinite(limite)) return true;
   return activasActuales < limite;
 }

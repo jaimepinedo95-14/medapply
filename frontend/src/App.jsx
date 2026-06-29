@@ -18,7 +18,9 @@ import Empleos from "./pages/Empleos";
 import DetalleOferta from "./pages/DetalleOferta";
 import Privacidad from "./pages/Privacidad";
 import Terminos from "./pages/Terminos";
-import Precios from "./pages/Precios";
+// Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+// Reactivar este import junto con la ruta /precios más abajo.
+// import Precios from "./pages/Precios";
 import Nosotros from "./pages/Nosotros";
 import FAQ from "./pages/FAQ";
 import Salarios from "./pages/Salarios";
@@ -130,7 +132,10 @@ function App() {
           <Route path="/faq"             element={<LayoutPublico><FAQ /></LayoutPublico>} />
           <Route path="/salarios"        element={<LayoutPublico><Salarios /></LayoutPublico>} />
           <Route path="/para-empresas"   element={<LayoutPublico><ParaEmpresas /></LayoutPublico>} />
+          {/* Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+              Reactivar junto con el import de Precios más arriba.
           <Route path="/precios"         element={<LayoutPublico><Precios /></LayoutPublico>} />
+          */}
           <Route path="/nosotros"        element={<LayoutPublico><Nosotros /></LayoutPublico>} />
           <Route path="/empresas/:id"    element={<LayoutPublico><PerfilPublicoEmpresa /></LayoutPublico>} />
           <Route path="/candidatos/:id"  element={<LayoutPublico><PerfilPublicoCandidato /></LayoutPublico>} />

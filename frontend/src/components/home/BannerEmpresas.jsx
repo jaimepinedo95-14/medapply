@@ -38,12 +38,15 @@ export default function BannerEmpresas() {
             >
               Publicar oferta gratis
             </Link>
+            {/* Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+                Reactivar quitando este comentario.
             <Link
               to="/precios"
               className="bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3 rounded-xl border border-white/30 transition-colors duration-200 text-center whitespace-nowrap"
             >
               Ver planes
             </Link>
+            */}
           </div>
         </div>
       </div>

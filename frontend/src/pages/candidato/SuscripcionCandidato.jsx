@@ -56,7 +56,9 @@ export default function SuscripcionCandidato() {
         <p className="text-gray-500 text-sm mt-1">Destaca tu perfil y aparece primero ante las empresas del sector salud.</p>
       </div>
 
-      {/* Plan actual */}
+      {/* Banner + tarjetas de planes — ocultos temporalmente: acceso
+          gratuito ilimitado, sin planes de pago. Quitar este comentario
+          para reactivar cuando vuelvan los pagos.
       <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 mb-8 flex items-center gap-3">
         <span className="text-2xl">📋</span>
         <div>
@@ -71,7 +73,6 @@ export default function SuscripcionCandidato() {
         </div>
       )}
 
-      {/* Tarjetas de planes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {PLANES.map((plan) => (
           <div key={plan.nombre} className={`bg-white rounded-2xl border p-6 relative ${plan.color}`}>
@@ -111,6 +112,11 @@ export default function SuscripcionCandidato() {
       <p className="text-center text-gray-400 text-xs mt-6">
         Puedes cancelar en cualquier momento. El pago se procesa de forma segura.
       </p>
+      */}
+
+      <div className="bg-esmeralda/10 border border-esmeralda/30 rounded-xl px-5 py-4 text-center text-sm text-azul-marino font-semibold">
+        🎉 Tienes acceso gratuito e ilimitado a todas las funciones de tu perfil.
+      </div>
     </div>
   );
 }

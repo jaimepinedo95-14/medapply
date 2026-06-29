@@ -252,9 +252,11 @@ export default function Estadisticas() {
     );
   }
 
-  if (plan !== "premium") {
-    return <GatePremium plan={plan} />;
-  }
+  // Gate por plan Premium oculto temporalmente: acceso gratuito ilimitado,
+  // sin planes de pago. Para reactivar el gate, descomenta el bloque de abajo.
+  // if (plan !== "premium") {
+  //   return <GatePremium plan={plan} />;
+  // }
 
   const convGlobal = resumen.visitas > 0
     ? Math.round((resumen.postulaciones / resumen.visitas) * 100)

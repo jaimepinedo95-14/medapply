@@ -225,7 +225,9 @@ export default function ParaEmpresas() {
         </div>
       </section>
 
-      {/* ── PLANES ── */}
+      {/* ── PLANES ──
+          Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+          Quitar este comentario para reactivar la sección completa.
       <section className="py-14 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
@@ -276,6 +278,7 @@ export default function ParaEmpresas() {
           </p>
         </div>
       </section>
+      */}
 
       {/* ── TESTIMONIOS ── */}
       <section className="py-14 px-4 bg-gray-50">

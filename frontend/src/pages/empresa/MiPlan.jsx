@@ -92,7 +92,9 @@ export default function MiPlan() {
         </div>
       )}
 
-      {/* Comparativa de planes */}
+      {/* Comparativa de planes — oculta temporalmente: acceso gratuito
+          ilimitado, sin planes de pago. Quitar este comentario para
+          reactivar cuando vuelvan los pagos.
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {PLANES_INFO.map((p, i) => {
           const esActual = p.key === plan;
@@ -140,6 +142,7 @@ export default function MiPlan() {
       <p className="text-center text-gray-400 text-xs mt-6">
         Todos los planes incluyen factura electrónica. Puedes cancelar en cualquier momento.
       </p>
+      */}
     </div>
   );
 }

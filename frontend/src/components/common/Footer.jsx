@@ -48,11 +48,14 @@ export default function Footer() {
                   <span className="text-xs">👤</span> Crear perfil gratis
                 </Link>
               </li>
+              {/* Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+                  Reactivar quitando este comentario cuando vuelvan los pagos.
               <li>
                 <Link to="/precios" className="hover:text-esmeralda-claro transition-colors flex items-center gap-1.5">
                   <span className="text-xs">⭐</span> Perfil destacado
                 </Link>
               </li>
+              */}
             </ul>
           </div>
 
@@ -65,11 +68,14 @@ export default function Footer() {
                   <span className="text-xs">🏥</span> Cómo funciona
                 </Link>
               </li>
+              {/* Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
+                  Reactivar quitando este comentario cuando vuelvan los pagos.
               <li>
                 <Link to="/precios" className="hover:text-esmeralda-claro transition-colors flex items-center gap-1.5">
                   <span className="text-xs">💳</span> Precios
                 </Link>
               </li>
+              */}
               <li>
                 <Link to="/registro/empresa" className="hover:text-esmeralda-claro transition-colors flex items-center gap-1.5">
                   <span className="text-xs">📋</span> Publicar oferta
