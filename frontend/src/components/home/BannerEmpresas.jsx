@@ -13,19 +13,19 @@ export default function BannerEmpresas() {
               ¿Tu empresa necesita personal de salud?
             </h2>
             <p className="text-blue-200 text-lg max-w-xl">
-              Publica tu primera oferta gratis. Accede a miles de profesionales del sector salud en Colombia.
+              Publica gratis durante nuestro lanzamiento. Accede a profesionales del sector salud en Colombia.
             </p>
 
             {/* Beneficios rápidos */}
             <ul className="mt-4 space-y-1.5 text-blue-100 text-sm">
               <li className="flex items-center gap-2">
-                <span className="text-esmeralda-claro">✓</span> 1 oferta activa gratis cada mes
+                <span className="text-esmeralda-claro">✓</span> Publicación de ofertas gratis por lanzamiento
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-esmeralda-claro">✓</span> Acceso a banco de hojas de vida con plan Premium
+                <span className="text-esmeralda-claro">✓</span> Candidatos del sector salud
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-esmeralda-claro">✓</span> Candidatos verificados del sector salud
+                <span className="text-esmeralda-claro">✓</span> Sin letra pequeña. Sin costos ocultos.
               </li>
             </ul>
           </div>
