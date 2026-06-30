@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LogoIcono from "../components/common/LogoIcono";
 
 export default function RecuperarPassword() {
   const { recuperarPassword } = useAuth();
@@ -34,12 +35,8 @@ export default function RecuperarPassword() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-9 h-9 bg-esmeralda rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl">+</span>
-            </div>
-            <span className="font-bold text-2xl">
-              <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
-            </span>
+            <LogoIcono size={36} />
+            <span className="font-bold text-2xl text-azul-marino">Med<span className="font-light text-esmeralda-claro">Apply</span></span>
           </Link>
         </div>
 

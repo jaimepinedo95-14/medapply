@@ -1,6 +1,7 @@
 // Footer actualizado con todos los enlaces de la plataforma
 import { Link } from "react-router-dom";
 import { CIUDADES_PRINCIPALES, PROFESIONES_PRINCIPALES } from "../../config/seo";
+import LogoIcono from "./LogoIcono";
 
 export default function Footer() {
   const anioActual = new Date().getFullYear();
@@ -13,9 +14,7 @@ export default function Footer() {
           {/* Columna 1: Logo y descripción */}
           <div className="sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-black text-xl">M</span>
-              </div>
+              <LogoIcono size={40} variant="dark" />
               <div className="flex items-baseline">
                 <span className="text-white font-bold text-xl">Med</span>
                 <span className="text-esmeralda-claro font-light text-xl">Apply</span>

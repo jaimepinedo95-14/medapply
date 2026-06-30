@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { PROFESIONES_SEO, CIUDADES_TOP_8 } from "../../config/seo";
+import { PROFESIONES_SEO, CIUDADES_SEO, CIUDADES_TOP_8 } from "../../config/seo";
 import SEOHead from "../../components/seo/SEOHead";
 import VacanteCard from "../../components/seo/VacanteCard";
 import { SkeletonGrid } from "../../components/seo/SkeletonCard";
@@ -22,6 +22,8 @@ function withTimeout(promise) {
 export default function EmpleosProfesion() {
   const { slug } = useParams();
   const profConfig = PROFESIONES_SEO.find(p => p.slug === slug);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ciudadActiva = searchParams.get("ciudad");
 
   const [pagina, setPagina]   = useState(0);
   const [ofertas, setOfertas] = useState([]);
@@ -35,14 +37,17 @@ export default function EmpleosProfesion() {
     setError(null);
     try {
       const offset = pagina * PAGE_SIZE;
-      const res = await withTimeout(
-        supabase.from("ofertas_con_empresa")
-          .select("*", { count: "exact" })
-          .ilike("categoria_profesional", `%${profConfig.busqueda}%`)
-          .eq("estado", "activa")
-          .order("fecha_publicacion", { ascending: false })
-          .range(offset, offset + PAGE_SIZE - 1)
-      );
+      const cityConfig = ciudadActiva ? CIUDADES_SEO.find(c => c.slug === ciudadActiva) : null;
+
+      let q = supabase.from("ofertas_con_empresa")
+        .select("*", { count: "exact" })
+        .ilike("categoria_profesional", `%${profConfig.busqueda}%`)
+        .eq("estado", "activa")
+        .order("fecha_publicacion", { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (cityConfig) q = q.eq("ciudad", cityConfig.db);
+
+      const res = await withTimeout(q);
       if (res.error) throw res.error;
       setOfertas(res.data ?? []);
       setTotal(res.count ?? 0);
@@ -51,9 +56,16 @@ export default function EmpleosProfesion() {
     } finally {
       setCargando(false);
     }
-  }, [profConfig, pagina]);
+  }, [profConfig, pagina, ciudadActiva]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  function toggleCiudad(slug) {
+    setPagina(0);
+    const params = new URLSearchParams(searchParams);
+    if (ciudadActiva === slug) { params.delete("ciudad"); } else { params.set("ciudad", slug); }
+    setSearchParams(params, { replace: true });
+  }
 
   if (!profConfig) return <Navigate to="/empleos" replace />;
 
@@ -101,16 +113,22 @@ export default function EmpleosProfesion() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Filtros por ciudad */}
         <div className="mb-6">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Filtrar por ciudad</p>
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
+            Filtrar por ciudad{ciudadActiva && <span className="ml-2 text-azul-marino normal-case">— <button onClick={() => toggleCiudad(ciudadActiva)} className="underline">quitar filtro</button></span>}
+          </p>
           <div className="flex flex-wrap gap-2">
             {ciudadesLinks.map(c => (
-              <Link
+              <button
                 key={c.slug}
-                to={`/empleos/${c.slug}`}
-                className="text-sm border border-gray-200 hover:border-azul-marino hover:text-azul-marino text-gray-600 px-3 py-1.5 rounded-xl transition-colors bg-white"
+                onClick={() => toggleCiudad(c.slug)}
+                className={`text-sm border px-3 py-1.5 rounded-xl transition-colors ${
+                  ciudadActiva === c.slug
+                    ? "border-azul-marino bg-azul-marino text-white"
+                    : "border-gray-200 hover:border-azul-marino hover:text-azul-marino text-gray-600 bg-white"
+                }`}
               >
-                📍 {c.nombre}
-              </Link>
+                {ciudadActiva === c.slug ? "✓ " : "📍 "}{c.nombre}
+              </button>
             ))}
           </div>
         </div>

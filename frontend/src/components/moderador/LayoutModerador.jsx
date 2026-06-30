@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LogoIcono from "../common/LogoIcono";
 
 export default function LayoutModerador() {
   const { usuario, logout } = useAuth();
@@ -20,12 +21,10 @@ export default function LayoutModerador() {
           {/* Logo + rol */}
           <div className="px-5 py-5 border-b border-gray-700 flex items-center justify-between">
             <Link to="/moderador/ofertas" className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">🛡</span>
-              </div>
+              <LogoIcono size={28} variant="dark" />
               <div>
                 <span className="font-bold text-base">
-                  <span className="text-esmeralda-claro">Med</span><span className="text-white">Apply</span>
+                  <span className="text-white">Med</span><span className="text-esmeralda-claro font-light">Apply</span>
                 </span>
                 <span className="block text-purple-400 text-xs leading-none font-semibold">Moderador</span>
               </div>

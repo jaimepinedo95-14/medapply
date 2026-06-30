@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
-import { CIUDADES_SEO, PROFESIONES_TOP_6, CIUDADES_TOP_8, TEXTOS_SEO_CIUDAD } from "../../config/seo";
+import { CIUDADES_SEO, PROFESIONES_SEO, PROFESIONES_TOP_6, CIUDADES_TOP_8, TEXTOS_SEO_CIUDAD } from "../../config/seo";
 import SEOHead from "../../components/seo/SEOHead";
 import VacanteCard from "../../components/seo/VacanteCard";
 import { SkeletonGrid } from "../../components/seo/SkeletonCard";
@@ -23,6 +23,8 @@ function withTimeout(promise) {
 export default function EmpleosCiudad() {
   const { id: ciudadSlug } = useParams();
   const cityConfig = CIUDADES_SEO.find(c => c.slug === ciudadSlug);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const profActiva = searchParams.get("profesion");
 
   const [pagina, setPagina]       = useState(0);
   const [ofertas, setOfertas]     = useState([]);
@@ -38,15 +40,18 @@ export default function EmpleosCiudad() {
     setError(null);
     try {
       const offset = pagina * PAGE_SIZE;
+      const profConfig = profActiva ? PROFESIONES_SEO.find(p => p.slug === profActiva) : null;
+
+      let q = supabase.from("ofertas_con_empresa")
+        .select("*", { count: "exact" })
+        .eq("ciudad", cityConfig.db)
+        .eq("estado", "activa")
+        .order("fecha_publicacion", { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (profConfig) q = q.ilike("categoria_profesional", `%${profConfig.busqueda}%`);
+
       const [resOfertas, resIps] = await Promise.all([
-        withTimeout(
-          supabase.from("ofertas_con_empresa")
-            .select("*", { count: "exact" })
-            .eq("ciudad", cityConfig.db)
-            .eq("estado", "activa")
-            .order("fecha_publicacion", { ascending: false })
-            .range(offset, offset + PAGE_SIZE - 1)
-        ),
+        withTimeout(q),
         withTimeout(
           supabase.from("ofertas_con_empresa")
             .select("empresa_id")
@@ -67,9 +72,16 @@ export default function EmpleosCiudad() {
     } finally {
       setCargando(false);
     }
-  }, [cityConfig, pagina]);
+  }, [cityConfig, pagina, profActiva]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  function toggleProfesion(slug) {
+    setPagina(0);
+    const params = new URLSearchParams(searchParams);
+    if (profActiva === slug) { params.delete("profesion"); } else { params.set("profesion", slug); }
+    setSearchParams(params, { replace: true });
+  }
 
   // Ciudad no encontrada: no renderizar (EmpleosDispatch ya filtró, pero por si acaso)
   if (!cityConfig) return <Navigate to="/empleos" replace />;
@@ -128,16 +140,22 @@ export default function EmpleosCiudad() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Filtros por profesión */}
         <div className="mb-6">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Filtrar por profesión</p>
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
+            Filtrar por profesión{profActiva && <span className="ml-2 text-azul-marino normal-case">— <button onClick={() => toggleProfesion(profActiva)} className="underline">quitar filtro</button></span>}
+          </p>
           <div className="flex flex-wrap gap-2">
             {PROFESIONES_TOP_6.map(p => (
-              <Link
+              <button
                 key={p.slug}
-                to={`/empleos/profesion/${p.slug}`}
-                className="text-sm border border-gray-200 hover:border-azul-marino hover:text-azul-marino text-gray-600 px-3 py-1.5 rounded-xl transition-colors bg-white"
+                onClick={() => toggleProfesion(p.slug)}
+                className={`text-sm border px-3 py-1.5 rounded-xl transition-colors ${
+                  profActiva === p.slug
+                    ? "border-azul-marino bg-azul-marino text-white"
+                    : "border-gray-200 hover:border-azul-marino hover:text-azul-marino text-gray-600 bg-white"
+                }`}
               >
-                {p.nombre}
-              </Link>
+                {profActiva === p.slug ? "✓ " : ""}{p.nombre}
+              </button>
             ))}
           </div>
         </div>

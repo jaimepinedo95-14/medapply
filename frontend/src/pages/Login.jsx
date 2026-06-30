@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BotonesOAuth from "../components/auth/BotonesOAuth";
+import LogoIcono from "../components/common/LogoIcono";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -57,12 +58,8 @@ export default function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-esmeralda rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">+</span>
-            </div>
-            <span className="font-bold text-2xl">
-              <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
-            </span>
+            <LogoIcono size={36} />
+            <span className="font-bold text-2xl text-azul-marino">Med<span className="font-light text-esmeralda-claro">Apply</span></span>
           </Link>
           <h1 className="text-2xl font-bold text-azul-marino">Bienvenido de nuevo</h1>
           <p className="text-gray-500 mt-1 text-sm">Inicia sesión en tu cuenta</p>

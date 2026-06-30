@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LogoIcono from "../components/common/LogoIcono";
 import { REGION } from "../config/region";
 import { useStats } from "../hooks/useStats";
 import BotonesOAuth from "../components/auth/BotonesOAuth";
@@ -78,12 +79,8 @@ export default function RegistroEmpresa() {
       {/* Panel izquierdo — solo escritorio */}
       <div className="hidden lg:flex lg:w-5/12 bg-azul-marino text-white flex-col justify-center px-12 py-16">
         <Link to="/" className="flex items-center mb-10">
-          <div className="w-10 h-10 bg-esmeralda rounded-xl flex items-center justify-center mr-3">
-            <span className="text-white font-bold text-xl">+</span>
-          </div>
-          <span className="font-bold text-2xl">
-            <span className="text-esmeralda-claro">Med</span><span className="text-white">Apply</span>
-          </span>
+          <LogoIcono size={40} variant="dark" />
+          <span className="font-bold text-2xl text-white ml-3">Med<span className="font-light text-esmeralda-claro">Apply</span></span>
         </Link>
 
         <h2 className="text-3xl font-bold leading-snug mb-3">
@@ -120,13 +117,9 @@ export default function RegistroEmpresa() {
       <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 bg-gray-50">
 
         {/* Logo solo en móvil */}
-        <Link to="/" className="lg:hidden flex items-center mb-8">
-          <div className="w-8 h-8 bg-esmeralda rounded-lg flex items-center justify-center mr-2">
-            <span className="text-white font-bold text-lg">+</span>
-          </div>
-          <span className="font-bold text-xl">
-            <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
-          </span>
+        <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
+          <LogoIcono size={32} />
+          <span className="font-bold text-xl text-azul-marino">Med<span className="font-light text-esmeralda-claro">Apply</span></span>
         </Link>
 
         <div className="w-full max-w-md">

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LogoIcono from "../common/LogoIcono";
 
 // Definición de links por permiso requerido
 const LINKS_ADMIN = [
@@ -35,9 +36,7 @@ function SidebarAdmin({ menuAbierto, cerrarMenu }) {
         {/* Logo + rol */}
         <div className="px-5 py-5 border-b border-gray-700 flex items-center justify-between">
           <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-esmeralda rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-base">M</span>
-            </div>
+            <LogoIcono size={36} variant="dark" />
             <div>
               <span className="font-bold text-base">
                 <span className="text-white">Med</span><span className="text-esmeralda-claro font-light">Apply</span>

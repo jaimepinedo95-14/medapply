@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import LogoIcono from "../components/common/LogoIcono";
 
 export default function NuevaPassword() {
   const navigate = useNavigate();
@@ -286,12 +287,8 @@ function LogoLink() {
   return (
     <div className="flex justify-center">
       <Link to="/" className="inline-flex items-center gap-2">
-        <div className="w-9 h-9 bg-esmeralda rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-xl">+</span>
-        </div>
-        <span className="font-bold text-2xl">
-          <span className="text-esmeralda">Med</span><span className="text-azul-marino">Apply</span>
-        </span>
+        <LogoIcono size={36} />
+        <span className="font-bold text-2xl text-azul-marino">Med<span className="font-light text-esmeralda-claro">Apply</span></span>
       </Link>
     </div>
   );

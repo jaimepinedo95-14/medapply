@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LogoIcono from "../common/LogoIcono";
 
 // Íconos SVG inline para el sidebar
 const Iconos = {
@@ -171,9 +172,7 @@ export default function LayoutDashboard({ tipo, children }) {
             {Iconos.menu}
           </button>
           <div className="flex items-center gap-1.5">
-            <div className="w-7 h-7 bg-esmeralda rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-black text-sm">M</span>
-            </div>
+            <LogoIcono size={28} />
             <span className="font-bold text-base">
               <span className="text-azul-marino">Med</span><span className="text-esmeralda-claro font-light">Apply</span>
             </span>
