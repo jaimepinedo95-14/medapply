@@ -1,5 +1,6 @@
 // Footer actualizado con todos los enlaces de la plataforma
 import { Link } from "react-router-dom";
+import { CIUDADES_PRINCIPALES, PROFESIONES_PRINCIPALES } from "../../config/seo";
 
 export default function Footer() {
   const anioActual = new Date().getFullYear();
@@ -117,8 +118,34 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* SEO: ciudades y profesiones principales */}
+        <div className="border-t border-blue-900 mt-10 pt-8 space-y-4">
+          <div>
+            <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">Empleos por ciudad</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {CIUDADES_PRINCIPALES.map(c => (
+                <Link key={c.slug} to={`/empleos/${c.slug}`}
+                  className="text-gray-400 hover:text-esmeralda-claro text-xs transition-colors">
+                  {c.nombre}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">Empleos por profesión</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {PROFESIONES_PRINCIPALES.map(p => (
+                <Link key={p.slug} to={`/empleos/profesion/${p.slug}`}
+                  className="text-gray-400 hover:text-esmeralda-claro text-xs transition-colors">
+                  {p.nombre}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Línea divisoria y copyright */}
-        <div className="border-t border-blue-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div className="border-t border-blue-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-gray-400 text-sm">
             © {anioActual} MedApply S.A.S. Todos los derechos reservados.
           </p>

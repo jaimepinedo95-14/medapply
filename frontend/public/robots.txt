@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://medapply.vercel.app/sitemap.xml
+Sitemap: https://medapply.co/sitemap.xml

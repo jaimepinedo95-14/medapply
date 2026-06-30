@@ -12,6 +12,13 @@ import BannerVistaEmpresa from "./components/dashboard/BannerVistaEmpresa";
 import LayoutAdmin from "./components/admin/LayoutAdmin";
 import LayoutModerador from "./components/moderador/LayoutModerador";
 
+// Páginas SEO
+import EmpleosDispatch    from "./pages/seo/EmpleosDispatch";
+import EmpleosProfesion   from "./pages/seo/EmpleosProfesion";
+import DirectorioIpsCiudad from "./pages/seo/DirectorioIpsCiudad";
+import DirectorioIpsSlug  from "./pages/seo/DirectorioIpsSlug";
+import SalarioProfesion   from "./pages/seo/SalarioProfesion";
+
 // Páginas públicas
 import Inicio from "./pages/Inicio";
 import Empleos from "./pages/Empleos";
@@ -124,14 +131,18 @@ function App() {
 
           {/* ── Páginas públicas ── */}
           <Route path="/"            element={<LayoutPublico><Inicio /></LayoutPublico>} />
-          <Route path="/empleos"     element={<LayoutPublico><Empleos /></LayoutPublico>} />
-          <Route path="/empleos/:id" element={<LayoutPublico><DetalleOferta /></LayoutPublico>} />
+          <Route path="/empleos"                    element={<LayoutPublico><Empleos /></LayoutPublico>} />
+          <Route path="/empleos/profesion/:slug"    element={<LayoutPublico><EmpleosProfesion /></LayoutPublico>} />
+          <Route path="/empleos/:id"                element={<LayoutPublico><EmpleosDispatch /></LayoutPublico>} />
           <Route path="/privacidad"      element={<LayoutPublico><Privacidad /></LayoutPublico>} />
           <Route path="/politica-datos"  element={<LayoutPublico><Privacidad /></LayoutPublico>} />
           <Route path="/terminos"        element={<LayoutPublico><Terminos /></LayoutPublico>} />
           <Route path="/faq"             element={<LayoutPublico><FAQ /></LayoutPublico>} />
           <Route path="/salarios"        element={<LayoutPublico><Salarios /></LayoutPublico>} />
-          <Route path="/para-empresas"   element={<LayoutPublico><ParaEmpresas /></LayoutPublico>} />
+          <Route path="/para-empresas"                        element={<LayoutPublico><ParaEmpresas /></LayoutPublico>} />
+          <Route path="/directorio/ips/:ciudad/:slugIps"    element={<LayoutPublico><DirectorioIpsSlug /></LayoutPublico>} />
+          <Route path="/directorio/ips/:ciudad"             element={<LayoutPublico><DirectorioIpsCiudad /></LayoutPublico>} />
+          <Route path="/salarios/:profesion"                element={<LayoutPublico><SalarioProfesion /></LayoutPublico>} />
           {/* Oculto temporalmente: acceso gratuito ilimitado, sin planes de pago.
               Reactivar junto con el import de Precios más arriba.
           <Route path="/precios"         element={<LayoutPublico><Precios /></LayoutPublico>} />

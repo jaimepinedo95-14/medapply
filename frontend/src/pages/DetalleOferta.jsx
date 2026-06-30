@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { notificarNuevaPostulacionAEmpresa, notificarPostulacionEnviadaACandidato } from "../lib/notificacionesEmail";
+import { CIUDADES_SEO, PROFESIONES_SEO } from "../config/seo";
 
 function diasDesde(fechaStr) {
   if (!fechaStr) return "";
@@ -310,6 +311,35 @@ export default function DetalleOferta() {
                     </Link>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Cross-links SEO: más vacantes por ciudad y profesión */}
+            {oferta && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {(() => {
+                  const citySlug = CIUDADES_SEO.find(c => c.db === oferta.ciudad)?.slug;
+                  const cat = oferta.categoria_profesional?.toLowerCase() ?? "";
+                  const profSlug = PROFESIONES_SEO.find(p =>
+                    p.db.toLowerCase() === cat || cat.includes(p.busqueda.toLowerCase())
+                  )?.slug;
+                  return (
+                    <>
+                      {citySlug && (
+                        <Link to={`/empleos/${citySlug}`}
+                          className="text-xs text-azul-marino hover:text-esmeralda border border-gray-200 hover:border-esmeralda px-3 py-1.5 rounded-xl transition-colors bg-white">
+                          Ver más vacantes en {oferta.ciudad}
+                        </Link>
+                      )}
+                      {profSlug && (
+                        <Link to={`/empleos/profesion/${profSlug}`}
+                          className="text-xs text-azul-marino hover:text-esmeralda border border-gray-200 hover:border-esmeralda px-3 py-1.5 rounded-xl transition-colors bg-white">
+                          Ver más vacantes de {oferta.categoria_profesional}
+                        </Link>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
