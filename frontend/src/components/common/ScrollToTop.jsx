@@ -13,11 +13,17 @@ export default function ScrollToTop() {
   useEffect(() => {
     if (hash) {
       const id = hash.slice(1);
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
+      // setTimeout(0) garantiza que el componente destino ya está en el DOM
+      // antes de intentar el scroll. Sin esto, al navegar desde otra ruta
+      // el getElementById puede devolver null porque React aún no ha
+      // terminado de pintar el nuevo árbol.
+      const timer = setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
     window.scrollTo(0, 0);
   }, [pathname, hash]);
