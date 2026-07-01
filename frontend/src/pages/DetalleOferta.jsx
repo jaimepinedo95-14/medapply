@@ -33,6 +33,7 @@ export default function DetalleOferta() {
   const [postulado, setPostulado]     = useState(false);
   const [errorPost, setErrorPost]     = useState("");
   const [copiado, setCopiado]         = useState(false);
+  const [modalPost, setModalPost]     = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -83,7 +84,7 @@ export default function DetalleOferta() {
   }, [id, usuario?.id]);
 
   const manejarPostulacion = async () => {
-    if (!usuario) { navigate("/login"); return; }
+    if (!usuario) { setModalPost(true); return; }
     if (usuario.rol !== "candidato") {
       setErrorPost("Solo los candidatos pueden postularse a ofertas.");
       return;
@@ -194,16 +195,12 @@ export default function DetalleOferta() {
           Solo los candidatos pueden postularse a esta oferta.
         </p>
       ) : (
-        <>
-          <Link to="/login"
-            className="block w-full text-center bg-gray-100 hover:bg-azul-marino hover:text-white text-gray-700 font-bold py-4 rounded-xl transition-colors text-base">
-            🔑 Inicia sesión para postularte
-          </Link>
-          <p className="text-center text-xs text-gray-400 mt-3">
-            ¿No tienes cuenta?{" "}
-            <Link to="/registro/candidato" className="text-esmeralda underline">Regístrate gratis</Link>
-          </p>
-        </>
+        <button
+          onClick={() => setModalPost(true)}
+          className="w-full btn-primario py-4 text-base"
+        >
+          ✅ Postularme a esta oferta
+        </button>
       )}
     </div>
   );
@@ -379,6 +376,52 @@ export default function DetalleOferta() {
 
         </div>
       </div>
+
+      {/* Modal: crear perfil para postularse */}
+      {modalPost && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+          onClick={() => setModalPost(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 bg-esmeralda/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">👤</span>
+            </div>
+            <h3 className="text-xl font-bold text-azul-marino mb-2">
+              Crea tu perfil gratuito
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">
+              Para postularte a esta oferta necesitas una cuenta gratuita.
+              Solo toma 30 segundos y es completamente gratis.
+            </p>
+            <div className="space-y-3">
+              <Link
+                to="/registro/candidato"
+                className="block w-full btn-primario py-3"
+                onClick={() => setModalPost(false)}
+              >
+                Crear perfil gratis
+              </Link>
+              <Link
+                to="/login"
+                className="block w-full text-center text-azul-marino font-semibold py-2.5 hover:underline text-sm"
+                onClick={() => setModalPost(false)}
+              >
+                Ya tengo cuenta — Iniciar sesión
+              </Link>
+            </div>
+            <button
+              onClick={() => setModalPost(false)}
+              className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

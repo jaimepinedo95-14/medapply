@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { PROFESIONES_SEO, CIUDADES_SEO, CIUDADES_TOP_8 } from "../../config/seo";
@@ -23,7 +23,11 @@ export default function EmpleosProfesion() {
   const { slug } = useParams();
   const profConfig = PROFESIONES_SEO.find(p => p.slug === slug);
   const [searchParams, setSearchParams] = useSearchParams();
-  const ciudadActiva = searchParams.get("ciudad");
+  const ciudadActiva   = searchParams.get("ciudad");
+  const busquedaActiva = searchParams.get("busqueda") ?? "";
+
+  const [textoBusqueda, setTextoBusqueda] = useState(busquedaActiva);
+  const debounceRef = useRef(null);
 
   const [pagina, setPagina]   = useState(0);
   const [ofertas, setOfertas] = useState([]);
@@ -46,6 +50,9 @@ export default function EmpleosProfesion() {
         .order("fecha_publicacion", { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
       if (cityConfig) q = q.eq("ciudad", cityConfig.db);
+      if (busquedaActiva.trim()) {
+        q = q.or(`titulo.ilike.%${busquedaActiva.trim()}%,categoria_profesional.ilike.%${busquedaActiva.trim()}%`);
+      }
 
       const res = await withTimeout(q);
       if (res.error) throw res.error;
@@ -56,9 +63,22 @@ export default function EmpleosProfesion() {
     } finally {
       setCargando(false);
     }
-  }, [profConfig, pagina, ciudadActiva]);
+  }, [profConfig, pagina, ciudadActiva, busquedaActiva]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  function handleTextoBusqueda(val) {
+    setTextoBusqueda(val);
+    setPagina(0);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (val.trim()) { next.set("busqueda", val.trim()); } else { next.delete("busqueda"); }
+        return next;
+      }, { replace: true });
+    }, 350);
+  }
 
   function toggleCiudad(slug) {
     setPagina(0);
@@ -111,6 +131,30 @@ export default function EmpleosProfesion() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Barra de búsqueda */}
+        <div className="mb-5">
+          <div className="relative">
+            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={textoBusqueda}
+              onChange={e => handleTextoBusqueda(e.target.value)}
+              placeholder="Buscar por cargo, especialidad o palabra clave..."
+              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-azul-marino focus:ring-2 focus:ring-azul-marino/10 transition-colors"
+            />
+            {textoBusqueda && (
+              <button onClick={() => handleTextoBusqueda("")} aria-label="Limpiar búsqueda"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xl leading-none">
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Filtros por ciudad */}
         <div className="mb-6">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">
