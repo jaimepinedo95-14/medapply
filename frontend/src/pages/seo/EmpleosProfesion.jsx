@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
+import { useParams, Link, Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { PROFESIONES_SEO, CIUDADES_SEO, CIUDADES_TOP_8 } from "../../config/seo";
 import SEOHead from "../../components/seo/SEOHead";
+import SelectorCiudad from "../../components/seo/SelectorCiudad";
 import VacanteCard from "../../components/seo/VacanteCard";
 import { SkeletonGrid } from "../../components/seo/SkeletonCard";
 import EmptyState from "../../components/seo/EmptyState";
@@ -21,6 +22,7 @@ function withTimeout(promise) {
 
 export default function EmpleosProfesion() {
   const { slug } = useParams();
+  const navigate   = useNavigate();
   const profConfig = PROFESIONES_SEO.find(p => p.slug === slug);
   const [searchParams, setSearchParams] = useSearchParams();
   const ciudadActiva   = searchParams.get("ciudad");
@@ -116,6 +118,13 @@ export default function EmpleosProfesion() {
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Trabajos de {profConfig.nombre} en Colombia
           </h1>
+
+          <SelectorCiudad
+            ciudadNombre={null}
+            onSelect={c => {
+              if (c) navigate(`/empleos/${c.slug}?profesion=${slug}`);
+            }}
+          />
 
           {!cargando && !error && (
             <div className="flex flex-wrap gap-4 text-sm">

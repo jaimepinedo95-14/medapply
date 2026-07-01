@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
+import { useParams, Link, Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { CIUDADES_SEO, PROFESIONES_SEO, PROFESIONES_TOP_6, CIUDADES_TOP_8, TEXTOS_SEO_CIUDAD } from "../../config/seo";
 import SEOHead from "../../components/seo/SEOHead";
+import SelectorCiudad from "../../components/seo/SelectorCiudad";
 import VacanteCard from "../../components/seo/VacanteCard";
 import { SkeletonGrid } from "../../components/seo/SkeletonCard";
 import EmptyState from "../../components/seo/EmptyState";
@@ -22,6 +23,7 @@ function withTimeout(promise) {
 
 export default function EmpleosCiudad() {
   const { id: ciudadSlug } = useParams();
+  const navigate   = useNavigate();
   const cityConfig = CIUDADES_SEO.find(c => c.slug === ciudadSlug);
   const [searchParams, setSearchParams] = useSearchParams();
   const profActiva     = searchParams.get("profesion");
@@ -135,6 +137,15 @@ export default function EmpleosCiudad() {
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Empleos en Salud en {cityConfig.nombre}
           </h1>
+
+          <SelectorCiudad
+            ciudadNombre={cityConfig.nombre}
+            onSelect={c => {
+              if (!c) return;
+              const params = profActiva ? `?profesion=${profActiva}` : "";
+              navigate(`/empleos/${c.slug}${params}`);
+            }}
+          />
 
           {/* Estadísticas */}
           {!cargando && !error && (
