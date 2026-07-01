@@ -2,10 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useNotificaciones } from "../../context/NotificacionesContext";
+import { supabase } from "../../lib/supabase";
+import { CIUDADES_SEO, PROFESIONES_SEO } from "../../config/seo";
 
+// Links del nav que NO tienen dropdown propio
 const LINKS_NAV = [
-  { href: "/empleos",      label: "Buscar empleos" },
-  { href: "/salarios",     label: "Salarios" },
+  { href: "/salarios",      label: "Salarios" },
   { href: "/para-empresas", label: "Para empresas" },
 ];
 
@@ -175,6 +177,146 @@ function BotoneroCampana() {
   );
 }
 
+// ── Dropdown "Buscar empleos" — carga datos al primer clic ───────────────────
+function DropdownEmpleos() {
+  const [abierto, setAbierto] = useState(false);
+  const [datos, setDatos]     = useState(null);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function onClickFuera(e) {
+      if (ref.current && !ref.current.contains(e.target)) setAbierto(false);
+    }
+    document.addEventListener("mousedown", onClickFuera);
+    return () => document.removeEventListener("mousedown", onClickFuera);
+  }, []);
+
+  async function cargarSiNecesario() {
+    if (datos) return;
+    try {
+      const { data } = await supabase
+        .from("ofertas_con_empresa")
+        .select("ciudad, categoria_profesional")
+        .eq("estado", "activa")
+        .limit(5000);
+
+      if (!data) throw new Error("sin datos");
+
+      const cc = {};
+      data.forEach(o => { const c = o.ciudad?.trim(); if (c) cc[c] = (cc[c] || 0) + 1; });
+
+      const cp = {};
+      PROFESIONES_SEO.forEach(p => {
+        cp[p.slug] = data.filter(o =>
+          o.categoria_profesional?.toLowerCase().includes(p.busqueda.toLowerCase())
+        ).length;
+      });
+
+      const ciudades = [...CIUDADES_SEO]
+        .map(c => ({ ...c, count: cc[c.db] || 0 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+
+      const profesiones = [...PROFESIONES_SEO]
+        .map(p => ({ ...p, count: cp[p.slug] || 0 }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+
+      setDatos({ ciudades, profesiones });
+    } catch {
+      setDatos({
+        ciudades:   CIUDADES_SEO.slice(0, 6).map(c => ({ ...c, count: 0 })),
+        profesiones: PROFESIONES_SEO.slice(0, 6).map(p => ({ ...p, count: 0 })),
+      });
+    }
+  }
+
+  const toglear = () => {
+    if (!abierto) cargarSiNecesario();
+    setAbierto(p => !p);
+  };
+
+  const cerrar = () => setAbierto(false);
+
+  const ciudadesMostrar   = datos?.ciudades   ?? CIUDADES_SEO.slice(0, 6);
+  const profesionesMostrar = datos?.profesiones ?? PROFESIONES_SEO.slice(0, 6);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={toglear}
+        className={`flex items-center gap-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+          abierto
+            ? "text-azul-marino bg-gray-50"
+            : "text-gray-600 hover:text-azul-marino hover:bg-gray-50"
+        }`}
+      >
+        Buscar empleos
+        <svg className={`w-3.5 h-3.5 transition-transform ${abierto ? "rotate-180" : ""}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {abierto && (
+        <div className="absolute left-0 top-full mt-1 w-[480px] bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50">
+          <div className="grid grid-cols-2 gap-6">
+
+            {/* Columna ciudades */}
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-3">
+                Por ciudad
+              </p>
+              <ul className="space-y-0.5">
+                {ciudadesMostrar.map(c => (
+                  <li key={c.slug}>
+                    <Link to={`/empleos/${c.slug}`} onClick={cerrar}
+                      className="flex items-center justify-between text-sm text-gray-700 hover:text-azul-marino px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <span>📍 {c.nombre}</span>
+                      {c.count > 0 && (
+                        <span className="text-xs text-gray-400 tabular-nums">{c.count}</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/empleos" onClick={cerrar}
+                className="block mt-3 text-xs text-esmeralda font-semibold hover:underline px-2">
+                Ver todas las ciudades →
+              </Link>
+            </div>
+
+            {/* Columna profesiones */}
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-3">
+                Por profesión
+              </p>
+              <ul className="space-y-0.5">
+                {profesionesMostrar.map(p => (
+                  <li key={p.slug}>
+                    <Link to={`/empleos/profesion/${p.slug}`} onClick={cerrar}
+                      className="flex items-center justify-between text-sm text-gray-700 hover:text-azul-marino px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <span>{p.nombre}</span>
+                      {p.count > 0 && (
+                        <span className="text-xs text-gray-400 tabular-nums">{p.count}</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link to="/empleos" onClick={cerrar}
+                className="block mt-3 text-xs text-esmeralda font-semibold hover:underline px-2">
+                Ver todas las profesiones →
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Navbar principal ─────────────────────────────────────────────────────────
 export default function Navbar() {
   const { usuario, logout } = useAuth();
@@ -206,6 +348,7 @@ export default function Navbar() {
 
           {/* Links centrales — escritorio */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            <DropdownEmpleos />
             {LINKS_NAV.map((l) => (
               <Link key={l.href} to={l.href}
                 className="relative text-gray-600 hover:text-azul-marino font-medium transition-colors text-sm px-3 py-2 rounded-lg hover:bg-gray-50 group">
@@ -276,6 +419,10 @@ export default function Navbar() {
       {menuAbierto && (
         <div className="md:hidden bg-white border-t border-gray-100 py-4">
           <div className="max-w-7xl mx-auto px-4 flex flex-col gap-1">
+            <Link to="/empleos" onClick={cerrarMenu}
+              className="text-gray-700 hover:text-azul-marino font-medium py-2.5 px-2 rounded-lg hover:bg-gray-50">
+              Buscar empleos
+            </Link>
             {LINKS_NAV.map((l) => (
               <Link key={l.href} to={l.href} onClick={cerrarMenu}
                 className="text-gray-700 hover:text-azul-marino font-medium py-2.5 px-2 rounded-lg hover:bg-gray-50">

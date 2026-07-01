@@ -1,4 +1,5 @@
 import Hero from "../components/home/Hero";
+import ExplorarSEO from "../components/home/ExplorarSEO";
 import Categorias from "../components/home/Categorias";
 import ComoFunciona from "../components/home/ComoFunciona";
 import BannerEmpresas from "../components/home/BannerEmpresas";
@@ -8,6 +9,7 @@ export default function Inicio() {
   return (
     <main>
       <Hero />
+      <ExplorarSEO />
       <Categorias />
       <ComoFunciona />
       <BannerEmpresas />

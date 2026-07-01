@@ -1,6 +1,6 @@
 // Footer actualizado con todos los enlaces de la plataforma
 import { Link } from "react-router-dom";
-import { CIUDADES_PRINCIPALES, PROFESIONES_PRINCIPALES } from "../../config/seo";
+import { CIUDADES_SEO, PROFESIONES_SEO } from "../../config/seo";
 import LogoIcono from "./LogoIcono";
 
 export default function Footer() {
@@ -122,7 +122,7 @@ export default function Footer() {
           <div>
             <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">Empleos por ciudad</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {CIUDADES_PRINCIPALES.map(c => (
+              {CIUDADES_SEO.map(c => (
                 <Link key={c.slug} to={`/empleos/${c.slug}`}
                   className="text-gray-400 hover:text-esmeralda-claro text-xs transition-colors">
                   {c.nombre}
@@ -133,7 +133,7 @@ export default function Footer() {
           <div>
             <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">Empleos por profesión</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {PROFESIONES_PRINCIPALES.map(p => (
+              {PROFESIONES_SEO.map(p => (
                 <Link key={p.slug} to={`/empleos/profesion/${p.slug}`}
                   className="text-gray-400 hover:text-esmeralda-claro text-xs transition-colors">
                   {p.nombre}
